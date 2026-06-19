@@ -45,7 +45,7 @@ export default function TechDashboard() {
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault()
-    if (password === 'tech2024') {
+    if (password === (import.meta.env.VITE_TECH_PASSWORD || 'tech2024')) {
       if (remember) {
         const expiry = new Date().getTime() + 7 * 24 * 60 * 60 * 1000
         localStorage.setItem(DASHBOARD_TOKEN_KEY, 'true')

@@ -122,7 +122,7 @@ export default function RoleSelect() {
         }}
         title="Acesso Tech"
         description="Digite a senha para acessar o painel da equipe técnica."
-        correctPassword="tech2024"
+        correctPassword={import.meta.env.VITE_TECH_PASSWORD}
       />
     </div>
   )
