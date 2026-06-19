@@ -4,7 +4,7 @@ import { Lock, X, Eye, EyeOff } from 'lucide-react'
 interface Props {
   open: boolean
   onClose: () => void
-  onSuccess: () => void
+  onSuccess: (remember: boolean) => void
   title: string
   description: string
   correctPassword: string
@@ -13,6 +13,7 @@ interface Props {
 export default function PasswordModal({ open, onClose, onSuccess, title, description, correctPassword }: Props) {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
+  const [remember, setRemember] = useState(false)
   const [error, setError] = useState('')
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -20,6 +21,7 @@ export default function PasswordModal({ open, onClose, onSuccess, title, descrip
     if (open) {
       setPassword('')
       setError('')
+      setRemember(false)
       setTimeout(() => inputRef.current?.focus(), 100)
     }
   }, [open])
@@ -36,7 +38,7 @@ export default function PasswordModal({ open, onClose, onSuccess, title, descrip
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (password === correctPassword) {
-      onSuccess()
+      onSuccess(remember)
       setPassword('')
       setError('')
     } else {
@@ -96,6 +98,16 @@ export default function PasswordModal({ open, onClose, onSuccess, title, descrip
                 <span>⚠</span> {error}
               </p>
             )}
+
+            <label className="flex items-center gap-2 mt-3 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={remember}
+                onChange={(e) => setRemember(e.target.checked)}
+                className="w-4 h-4 rounded border-border-strong text-primary focus:ring-primary"
+              />
+              <span className="text-sm text-text-secondary">Lembrar por 7 dias</span>
+            </label>
 
             <div className="flex gap-2 mt-4 justify-end">
               <button

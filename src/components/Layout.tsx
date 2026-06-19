@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import type { Role } from '../types.ts'
-import { ArrowLeft, Moon, Sun } from 'lucide-react'
+import { ArrowLeft, Moon, Sun, LogOut } from 'lucide-react'
 
 export default function Layout() {
   const location = useLocation()
@@ -44,6 +44,15 @@ export default function Layout() {
               <Link to="/tech" className={`px-3 py-1.5 rounded ${location.pathname === '/tech' ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Painel</Link>
               <Link to="/tech/kanban" className={`px-3 py-1.5 rounded ${location.pathname.startsWith('/tech/kanban') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban</Link>
             </div>
+          )}
+          {role === 'Tech' && (
+            <button
+              onClick={() => { localStorage.removeItem('tech_access_token'); navigate('/') }}
+              className="p-2 hover:bg-surface-hover rounded text-text-secondary hover:text-text transition-colors"
+              title="Sair da conta Tech"
+            >
+              <LogOut size={18} />
+            </button>
           )}
           <button onClick={toggleDark} className="p-2 hover:bg-surface-hover rounded">
             {dark ? <Sun size={18} /> : <Moon size={18} />}

@@ -1,11 +1,37 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Headset, ShoppingBag, Wrench } from 'lucide-react'
 import PasswordModal from '../components/PasswordModal.tsx'
 
+const TECH_TOKEN_KEY = 'tech_access_token'
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+
+function getStoredToken(): string | null {
+  const raw = localStorage.getItem(TECH_TOKEN_KEY)
+  if (!raw) return null
+  try {
+    const { expiresAt } = JSON.parse(raw)
+    if (Date.now() > expiresAt) {
+      localStorage.removeItem(TECH_TOKEN_KEY)
+      return null
+    }
+    return raw
+  } catch {
+    localStorage.removeItem(TECH_TOKEN_KEY)
+    return null
+  }
+}
+
 export default function RoleSelect() {
   const navigate = useNavigate()
   const [techModalOpen, setTechModalOpen] = useState(false)
+
+  useEffect(() => {
+    const token = getStoredToken()
+    if (token) {
+      navigate('/tech')
+    }
+  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-primary-light to-page flex flex-col items-center justify-center p-4">
@@ -49,7 +75,13 @@ export default function RoleSelect() {
       <PasswordModal
         open={techModalOpen}
         onClose={() => setTechModalOpen(false)}
-        onSuccess={() => { setTechModalOpen(false); navigate('/tech') }}
+        onSuccess={(remember) => {
+          setTechModalOpen(false)
+          if (remember) {
+            localStorage.setItem(TECH_TOKEN_KEY, JSON.stringify({ expiresAt: Date.now() + SEVEN_DAYS_MS }))
+          }
+          navigate('/tech')
+        }}
         title="Acesso Tech"
         description="Digite a senha para acessar o painel da equipe técnica."
         correctPassword="tech2024"
