@@ -34,6 +34,14 @@
   --_border-strong: #4b5563;
 }
 
+button, a, [role="button"], label {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+button:active, a:active, [role="button"]:active, label:active {
+  transform: scale(0.97);
+}
+
 @theme {
   --color-primary: var(--_p);
   --color-primary-hover: var(--_ph);
