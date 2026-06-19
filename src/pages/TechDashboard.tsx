@@ -27,6 +27,225 @@ function getDaysWaiting(createdAt: string): number {
   return Math.floor((new Date().getTime() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24))
 }
 
+function escapeHtml(s: string): string {
+  return s.replace(/[&<>"]/g, (c: string) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] || c)
+}
+
+interface PrintData {
+  title: string
+  totalCards: number
+  approvedCards: number
+  rejectedCards: number
+  approvalRate: string
+  monthTrend: { name: string; total: number; aprovados: number; reprovados: number }[]
+  statusData: { name: string; value: number; color: string }[]
+  systemData: { name: string; value: number }[]
+  devData: { name: string; aprovados: number; reprovados: number; total: number }[]
+  severity: { key: string; label: string; total: number; approved: number }[]
+  aFazerCards: { id: string; title: string; system: string; area: string; days: number }[]
+  reportByDev: { dev: string; cards: { title: string; system: string; date: string }[] }[]
+  generatedAt: string
+}
+
+function generatePrintHTML(data: PrintData): string {
+  const maxTrend = Math.max(...data.monthTrend.map(m => m.total), 1)
+  const maxSystem = Math.max(...data.systemData.map(s => s.value), 1)
+  const statusTotal = data.statusData.reduce((s, d) => s + d.value, 0)
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relat\u00f3rio Agiliza AI</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#111;background:#fff;line-height:1.5;padding:20px}
+@page{margin:12mm 15mm;size:A4}
+.report{max-width:1000px;margin:0 auto}
+h1{font-size:22px;color:#ea580c;margin-bottom:2px}
+.sub{font-size:14px;color:#6b7280;margin-bottom:4px}
+.meta{font-size:11px;color:#9ca3af;margin-bottom:24px}
+.sec-title{font-size:14px;font-weight:600;color:#1f2937;margin-top:24px;margin-bottom:4px}
+.sec-desc{font-size:11px;color:#6b7280;margin-bottom:10px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.kpi{border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}
+.kpi-val{font-size:22px;font-weight:700;color:#1f2937}
+.kpi-lbl{font-size:11px;color:#6b7280;margin-top:2px}
+.kpi-g .kpi-val{color:#16a34a}
+.kpi-r .kpi-val{color:#dc2626}
+.kpi-a .kpi-val{color:#d97706}
+.trend{display:flex;align-items:flex-end;gap:4px;height:200px;margin-bottom:4px}
+.tc{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end}
+.tb{display:flex;gap:2px;width:100%;justify-content:center;align-items:flex-end;height:180px}
+.tb-bar{width:8px;border-radius:2px 2px 0 0;min-height:2px}
+.tb-o{background:#ea580c}
+.tb-g{background:#22c55e}
+.tb-r{background:#ef4444}
+.tl{font-size:9px;color:#6b7280;margin-top:3px}
+.tleg{display:flex;gap:16px;justify-content:center;font-size:11px;color:#6b7280;margin-top:4px}
+.tleg span{display:flex;align-items:center;gap:4px}
+.tleg i{display:inline-block;width:10px;height:10px;border-radius:2px}
+.hr{display:flex;align-items:center;gap:8px;margin-bottom:5px}
+.hl{width:120px;font-size:11px;color:#374151;text-align:right;flex-shrink:0}
+.ht{flex:1;height:18px;background:#f3f4f6;border-radius:3px;overflow:hidden}
+.hf{height:100%;background:#3b82f6;border-radius:3px}
+.hv{width:32px;font-size:11px;color:#6b7280;text-align:right;flex-shrink:0}
+.st{flex:1;height:18px;background:#f3f4f6;border-radius:3px;overflow:hidden;display:flex}
+.sg{height:100%;background:#22c55e}
+.sr{height:100%;background:#ef4444}
+.sv{width:60px;font-size:11px;color:#6b7280;text-align:right;flex-shrink:0}
+.srow{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.sdot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sname{flex:1;font-size:11px;color:#374151}
+.spct{font-size:11px;color:#6b7280}
+.sgrd{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.scrd{border:1px solid #e5e7eb;border-radius:8px;padding:12px;text-align:center}
+.sp{font-size:20px;font-weight:700;color:#1f2937}
+.sl{font-size:11px;color:#6b7280;margin-top:2px}
+.sc{font-size:10px;color:#9ca3af;margin-top:1px}
+.sbar{height:4px;background:#f3f4f6;border-radius:2px;margin-top:8px;overflow:hidden}
+.sbf{height:100%;border-radius:2px}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{text-align:left;padding:6px 8px;border-bottom:2px solid #e5e7eb;color:#6b7280;font-weight:600;font-size:10px;text-transform:uppercase}
+td{padding:5px 8px;border-bottom:1px solid #f3f4f6;color:#374151}
+tr.hl td{background:#fef2f2;color:#dc2626;font-weight:500}
+.ds{border:1px solid #e5e7eb;border-radius:6px;padding:10px;margin-bottom:8px}
+.dh{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:12px;font-weight:600;color:#1f2937}
+.db{font-size:10px;background:#fef3c7;color:#d97706;padding:1px 6px;border-radius:10px}
+.dc{display:flex;justify-content:space-between;align-items:center;font-size:11px;padding:4px 6px;background:#f9fafb;border-radius:4px;margin-bottom:3px}
+.dsSys{color:#6b7280;font-weight:500}
+.dsDt{color:#9ca3af}
+.footer{text-align:center;font-size:10px;color:#9ca3af;margin-top:24px;padding-top:12px;border-top:1px solid #e5e7eb}
+.na{text-align:center;padding:24px;color:#9ca3af;font-size:12px}
+</style>
+</head>
+<body>
+<div class="report">
+  <div style="text-align:center;margin-bottom:20px">
+    <h1>Agiliza AI</h1>
+    <div class="sub">Relat\u00f3rio de Gest\u00e3o ${data.title}</div>
+    <div class="meta">Gerado em ${data.generatedAt} \u2014 Dados consolidados de todas as equipes (CS, Comercial, Tech)</div>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi"><div class="kpi-val">${data.totalCards}</div><div class="kpi-lbl">Total de Cards</div></div>
+    <div class="kpi kpi-g"><div class="kpi-val">${data.approvedCards}</div><div class="kpi-lbl">Aprovados</div></div>
+    <div class="kpi kpi-r"><div class="kpi-val">${data.rejectedCards}</div><div class="kpi-lbl">Reprovados</div></div>
+    <div class="kpi kpi-a"><div class="kpi-val">${data.approvalRate}</div><div class="kpi-lbl">Taxa de Aprova\u00e7\u00e3o</div></div>
+  </div>
+
+  <div class="sec-title">1. Tend\u00eancia Mensal</div>
+  <div class="sec-desc">Evolu\u00e7\u00e3o do volume de cards nos \u00faltimos 12 meses, incluindo total de cards criados, aprovados e reprovados por m\u00eas.</div>
+  ${data.monthTrend.every(m => m.total === 0) ? '<div class="na">Sem dados no per\u00edodo.</div>' : `
+  <div class="trend">
+    ${data.monthTrend.map(m => `
+      <div class="tc">
+        <div class="tb">
+          <div class="tb-bar tb-o" style="height:${Math.max((m.total / maxTrend) * 100, 2)}%"></div>
+          <div class="tb-bar tb-g" style="height:${Math.max((m.aprovados / maxTrend) * 100, 2)}%"></div>
+          <div class="tb-bar tb-r" style="height:${Math.max((m.reprovados / maxTrend) * 100, 2)}%"></div>
+        </div>
+        <div class="tl">${m.name}</div>
+      </div>
+    `).join('')}
+  </div>
+  <div class="tleg">
+    <span><i style="background:#ea580c"></i> Total</span>
+    <span><i style="background:#22c55e"></i> Aprovados</span>
+    <span><i style="background:#ef4444"></i> Reprovados</span>
+  </div>`}
+
+  <div class="sec-title">2. Distribui\u00e7\u00e3o por Status</div>
+  <div class="sec-desc">Propor\u00e7\u00e3o de cards em cada etapa do fluxo de trabalho.</div>
+  ${data.statusData.length === 0 ? '<div class="na">Sem dados no per\u00edodo.</div>' : `
+  ${data.statusData.map(s => `
+    <div class="srow">
+      <div class="sdot" style="background:${s.color}"></div>
+      <div class="sname">${s.name}</div>
+      <div class="spct">${s.value} (${Math.round((s.value / statusTotal) * 100)}%)</div>
+    </div>
+  `).join('')}
+  <div style="display:flex;height:12px;border-radius:6px;overflow:hidden;margin-top:8px">
+    ${data.statusData.map(s => `<div style="flex:${s.value};background:${s.color};min-width:2px"></div>`).join('')}
+  </div>`}
+
+  <div class="sec-title">3. Cards por Sistema</div>
+  <div class="sec-desc">Distribui\u00e7\u00e3o das demandas entre os sistemas da plataforma.</div>
+  ${data.systemData.length === 0 ? '<div class="na">Sem dados no per\u00edodo.</div>' : data.systemData.map(s => `
+    <div class="hr">
+      <div class="hl">${escapeHtml(s.name)}</div>
+      <div class="ht"><div class="hf" style="width:${Math.max((s.value / maxSystem) * 100, 2)}%"></div></div>
+      <div class="hv">${s.value}</div>
+    </div>
+  `).join('')}
+
+  <div class="sec-title">4. Produtividade por Desenvolvedor</div>
+  <div class="sec-desc">Cards aprovados vs reprovados por desenvolvedor no per\u00edodo.</div>
+  ${data.devData.length === 0 ? '<div class="na">Nenhum card resolvido no per\u00edodo.</div>' : data.devData.map(d => `
+    <div class="hr">
+      <div class="hl">${escapeHtml(d.name)}</div>
+      <div class="st">
+        <div class="sg" style="width:${d.total > 0 ? Math.max((d.aprovados / d.total) * 100, d.aprovados > 0 ? 2 : 0) : 0}%"></div>
+        <div class="sr" style="width:${d.total > 0 ? Math.max((d.reprovados / d.total) * 100, d.reprovados > 0 ? 2 : 0) : 0}%"></div>
+      </div>
+      <div class="sv">${d.aprovados}/${d.reprovados}</div>
+    </div>
+  `).join('')}
+
+  <div class="sec-title">5. Taxa de Resolu\u00e7\u00e3o por Tipo</div>
+  <div class="sec-desc">Percentual de cards resolvidos por categoria.</div>
+  ${data.severity.length === 0 ? '<div class="na">Sem dados no per\u00edodo.</div>' : `
+  <div class="sgrd">
+    ${data.severity.map(s => {
+      const pct = s.total > 0 ? Math.round((s.approved / s.total) * 100) : 0
+      const sevColor = s.key === 'bug' ? '#dc2626' : s.key === 'melhoria' ? '#2563eb' : '#d97706'
+      return `
+    <div class="scrd">
+      <div class="sp">${s.total > 0 ? pct + '%' : '-'}</div>
+      <div class="sl">${s.label}s</div>
+      <div class="sc">${s.approved}/${s.total} resolvidos</div>
+      <div class="sbar"><div class="sbf" style="width:${pct}%;background:${sevColor}"></div></div>
+    </div>`
+    }).join('')}
+  </div>`}
+
+  <div class="sec-title">6. Cards Aguardando \u2014 Tempo de Espera</div>
+  <div class="sec-desc">Cards em "A Fazer" n\u00e3o iniciados. Dias acima de 7 destacados em vermelho.</div>
+  ${data.aFazerCards.length === 0 ? '<div class="na">Nenhum card em A Fazer no per\u00edodo.</div>' : `
+  <div style="margin-bottom:6px;font-size:11px;color:#6b7280">${data.aFazerCards.length} card${data.aFazerCards.length !== 1 ? 's' : ''} aguardando \u2014 M\u00e9dia de ${Math.round(data.aFazerCards.reduce((s, c) => s + c.days, 0) / data.aFazerCards.length)} dias de espera</div>
+  <table>
+    <thead><tr><th>T\u00edtulo</th><th>Sistema</th><th>\u00c1rea</th><th style="text-align:right">Dias</th></tr></thead>
+    <tbody>
+      ${data.aFazerCards.map(c => `
+      <tr${c.days > 7 ? ' class="hl"' : ''}>
+        <td>${escapeHtml(c.title)}</td>
+        <td>${escapeHtml(c.system)}</td>
+        <td>${escapeHtml(c.area)}</td>
+        <td style="text-align:right;font-weight:600">${c.days}d</td>
+      </tr>`).join('')}
+    </tbody>
+  </table>`}
+
+  <div class="sec-title">7. Cards Aprovados por Desenvolvedor</div>
+  <div class="sec-desc">Rela\u00e7\u00e3o detalhada de cards aprovados no per\u00edodo, agrupados por respons\u00e1vel.</div>
+  ${data.reportByDev.length === 0 ? '<div class="na">Nenhum card aprovado no per\u00edodo.</div>' : data.reportByDev.map(r => `
+    <div class="ds">
+      <div class="dh"><span>${escapeHtml(r.dev)}</span><span class="db">${r.cards.length} card${r.cards.length !== 1 ? 's' : ''}</span></div>
+      ${r.cards.map(c => `
+      <div class="dc">
+        <div><span class="dsSys">${escapeHtml(c.system)}</span> \u2014 ${escapeHtml(c.title)}</div>
+        <div class="dsDt">${c.date}</div>
+      </div>`).join('')}
+    </div>
+  `).join('')}
+
+  <div class="footer">Agiliza AI \u2014 Relat\u00f3rio gerado automaticamente em ${data.generatedAt}<br>Dados sujeitos a altera\u00e7\u00f5es conforme novos cards s\u00e3o criados ou atualizados.</div>
+</div>
+</body>
+</html>`
+}
+
 export default function TechDashboard() {
   const navigate = useNavigate()
   const [authenticated, setAuthenticated] = useState(false)
@@ -140,7 +359,36 @@ export default function TechDashboard() {
   ).sort((a, b) => b[1].length - a[1].length)
 
   function handlePrint() {
-    window.print()
+    const title = isAnnual ? `Anual - ${year}` : `${monthNames[month]} ${year}`
+    const approvalRate = periodCards.length > 0 ? `${Math.round((approvedCards.length / periodCards.length) * 100)}%` : '-'
+    const severityItems = (['bug', 'melhoria', 'sugestao'] as const).map(sev => ({
+      key: sev, label: SEVERITY_LABELS[sev],
+      total: severityTotals[sev], approved: severityApproved[sev],
+    }))
+    const aFazerPrint = aFazerCards.map(c => ({
+      id: c.id, title: c.title, system: c.system_name || 'N/A', area: c.area,
+      days: getDaysWaiting(c.created_at),
+    }))
+    const reportDevs = reportByDev.map(([dev, cards]) => ({
+      dev,
+      cards: cards.map(c => ({ title: c.title, system: c.system_name || 'N/A', date: new Date(c.created_at).toLocaleDateString('pt-BR') }))
+    }))
+    const printData: PrintData = {
+      title, totalCards: periodCards.length, approvedCards: approvedCards.length,
+      rejectedCards: rejectedCards.length, approvalRate, monthTrend: [...monthTrend],
+      statusData: [...statusData], systemData: [...systemData], devData: [...devData],
+      severity: severityItems, aFazerCards: aFazerPrint, reportByDev: reportDevs,
+      generatedAt: new Date().toLocaleString('pt-BR'),
+    }
+    const html = generatePrintHTML(printData)
+    const win = window.open('', '_blank')
+    if (win) {
+      win.document.write(html)
+      win.document.close()
+      setTimeout(() => { win.focus(); win.print() }, 500)
+    } else {
+      alert('Pop-up bloqueado. Permita pop-ups para imprimir o relatório.')
+    }
   }
 
   const today = new Date()
