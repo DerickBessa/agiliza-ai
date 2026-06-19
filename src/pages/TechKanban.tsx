@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
-import type { Card } from '../types.ts'
-import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle } from 'lucide-react'
+import type { Card, Kanban } from '../types.ts'
+import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, ArrowLeft } from 'lucide-react'
 
 const statusOrder = ['a_fazer', 'em_progresso', 'concluido', 'aprovado', 'reprovado']
 const statusLabels: Record<string, string> = {
@@ -19,9 +20,22 @@ const severityIcons: Record<string, React.ReactNode> = {
 }
 
 export default function TechKanban() {
+  const { kanbanId } = useParams()
+  const navigate = useNavigate()
   const [cards, setCards] = useState<Card[]>([])
+  const [kanban, setKanban] = useState<Kanban | null>(null)
   const [dragging, setDragging] = useState<string | null>(null)
   const dragRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    if (kanbanId) {
+      supabase.from('kanbans').select('*').eq('id', kanbanId).single().then(({ data }) => {
+        if (data) setKanban(data)
+      })
+    } else {
+      setKanban(null)
+    }
+  }, [kanbanId])
 
   useEffect(() => {
     loadCards()
@@ -29,13 +43,17 @@ export default function TechKanban() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, () => loadCards())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [])
+  }, [kanbanId])
 
   async function loadCards() {
-    const { data } = await supabase
+    let query = supabase
       .from('cards')
       .select('*, systems(name)')
       .order('created_at', { ascending: false })
+    if (kanbanId) {
+      query = query.eq('kanban_id', kanbanId)
+    }
+    const { data } = await query
     if (data) {
       setCards(data.map((c) => ({
         ...c,
@@ -76,7 +94,15 @@ export default function TechKanban() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Kanban Geral - Tech</h2>
+      {kanbanId && (
+        <button onClick={() => navigate('/tech')} className="flex items-center gap-1 text-sm text-text-secondary hover:text-text mb-4">
+          <ArrowLeft size={16} /> Voltar para Painel Tech
+        </button>
+      )}
+      <h2 className="text-2xl font-bold mb-1">
+        {kanban ? kanban.name : 'Kanban Geral'}
+        {kanban && <span className="text-base font-normal text-text-secondary ml-2">— {kanban.role}</span>}
+      </h2>
       <p className="text-text-secondary text-sm mb-6">Arraste os cards entre as colunas para alterar o status</p>
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statusOrder.map((status) => (

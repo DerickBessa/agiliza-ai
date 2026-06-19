@@ -208,21 +208,25 @@ export default function TechPanel() {
 
       {tab === 'kanbans' && (
         <div className="space-y-3">
-          <p className="text-text-secondary text-sm mb-4">Gerencie os kanbans de todos os times. A deleção remove todos os cards associados.</p>
+          <p className="text-text-secondary text-sm mb-4">Clique em um kanban para abrir seu quadro com drag & drop. A deleção remove todos os cards associados.</p>
           <div className="grid gap-3 md:grid-cols-2">
             {kanbans.map((kanban) => (
-              <div key={kanban.id} className="flex items-center gap-4 p-4 bg-surface rounded-xl border border-border">
+              <button
+                key={kanban.id}
+                onClick={() => navigate(`/tech/kanban/${kanban.id}`)}
+                className="flex items-center gap-4 p-4 bg-surface rounded-xl border border-border hover:shadow-md transition-shadow text-left w-full cursor-pointer"
+              >
                 <div className="flex-1">
                   <p className="font-semibold">{kanban.name}</p>
                   <p className="text-sm text-text-muted">{kanban.role} • {new Date(kanban.created_at).toLocaleDateString('pt-BR')}</p>
                 </div>
                 <button
-                  onClick={() => handleDeleteKanban(kanban)}
+                  onClick={(e) => { e.stopPropagation(); handleDeleteKanban(kanban) }}
                   className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
                 >
                   <Trash2 size={14} /> Deletar
                 </button>
-              </div>
+              </button>
             ))}
           </div>
           {kanbans.length === 0 && (
