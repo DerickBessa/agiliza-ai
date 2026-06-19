@@ -2,12 +2,14 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Role, Card } from '../types.ts'
-import { Plus, Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle } from 'lucide-react'
+import { Plus, Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Trash2 } from 'lucide-react'
 
 interface Props {
   role: Role
+  kanbanId: string
   createPath: string
   cardDetailPath: string
+  onDeleteCard?: (card: Card) => void
 }
 
 const statusOrder = ['a_fazer', 'em_progresso', 'concluido', 'aprovado', 'reprovado']
@@ -32,7 +34,7 @@ const severityIcons: Record<string, React.ReactNode> = {
   Minor: <MinusCircle size={16} className="text-yellow-500" />,
 }
 
-export default function KanbanBoard({ role, createPath, cardDetailPath }: Props) {
+export default function KanbanBoard({ role, kanbanId, createPath, cardDetailPath, onDeleteCard }: Props) {
   const [cards, setCards] = useState<Card[]>([])
 
   useEffect(() => {
@@ -44,20 +46,34 @@ export default function KanbanBoard({ role, createPath, cardDetailPath }: Props)
       )
       .subscribe()
     return () => { supabase.removeChannel(channel) }
-  }, [role])
+  }, [role, kanbanId])
 
   async function loadCards() {
-    const { data } = await supabase
+    let query = supabase
       .from('cards')
       .select('*, systems(name)')
       .eq('role', role)
-      .order('created_at', { ascending: false })
+    if (kanbanId) {
+      query = query.eq('kanban_id', kanbanId)
+    }
+    const { data } = await query.order('created_at', { ascending: false })
     if (data) {
       setCards(data.map((c) => ({
         ...c,
         system_name: c.systems?.name,
         system_id: c.system_id,
       })))
+    }
+  }
+
+  async function handleDelete(card: Card, e: React.MouseEvent) {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!confirm(`Deletar card "${card.title}"? Esta ação não pode ser desfeita.`)) return
+    const { error } = await supabase.from('cards').delete().eq('id', card.id)
+    if (!error) {
+      loadCards()
+      onDeleteCard?.(card)
     }
   }
 
@@ -88,17 +104,26 @@ export default function KanbanBoard({ role, createPath, cardDetailPath }: Props)
                 <Link
                   key={card.id}
                   to={`${cardDetailPath}/${card.id}`}
-                  className="block bg-white dark:bg-gray-800 rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700"
+                  className="block bg-surface rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border border-border relative group"
                 >
+                  {(card.status === 'aprovado' || card.status === 'reprovado') && (
+                    <button
+                      onClick={(e) => handleDelete(card, e)}
+                      className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
+                      title="Deletar card"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400">{card.system_name || 'Sistema'}</span>
+                    <span className="text-xs font-medium text-text-secondary">{card.system_name || 'Sistema'}</span>
                     <div className="flex items-center gap-1 shrink-0">
                       {card.type === 'Bug' ? <Bug size={14} className="text-red-500" /> : <Lightbulb size={14} className="text-amber-500" />}
                       {severityIcons[card.severity]}
                     </div>
                   </div>
                   <p className="text-sm font-medium leading-tight line-clamp-2">{card.title}</p>
-                  <div className="flex items-center gap-2 mt-2 text-xs text-gray-400">
+                  <div className="flex items-center gap-2 mt-2 text-xs text-text-muted">
                     <span>{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
                     <span>{card.area}</span>
                   </div>

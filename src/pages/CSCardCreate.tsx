@@ -1,5 +1,7 @@
+import { useParams } from 'react-router-dom'
 import CardCreate from '../components/CardCreate.tsx'
 
 export default function CSCardCreate() {
-  return <CardCreate role="CS" backPath="/cs/kanban" />
+  const { kanbanId } = useParams()
+  return <CardCreate role="CS" backPath={kanbanId ? `/cs/kanban/${kanbanId}` : '/cs/kanban'} selectedKanbanId={kanbanId} />
 }

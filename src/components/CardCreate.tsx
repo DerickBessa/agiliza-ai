@@ -1,22 +1,25 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
-import type { Role, System } from '../types.ts'
+import type { Role, System, Kanban } from '../types.ts'
 import { Upload, Send } from 'lucide-react'
 
 interface Props {
   role: Role
   backPath: string
+  selectedKanbanId?: string
 }
 
-export default function CardCreate({ role, backPath }: Props) {
+export default function CardCreate({ role, backPath, selectedKanbanId }: Props) {
   const navigate = useNavigate()
   const [systems, setSystems] = useState<System[]>([])
+  const [kanbans, setKanbans] = useState<Kanban[]>([])
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
   const [systemId, setSystemId] = useState('')
+  const [kanbanId, setKanbanId] = useState(selectedKanbanId || '')
   const [area, setArea] = useState('')
   const [type, setType] = useState<'Bug' | 'Inovação'>('Bug')
   const [severity, setSeverity] = useState<'Blocker' | 'Major' | 'Minor'>('Minor')
@@ -26,6 +29,7 @@ export default function CardCreate({ role, backPath }: Props) {
 
   useEffect(() => {
     loadSystems()
+    loadKanbans()
   }, [])
 
   async function loadSystems() {
@@ -33,10 +37,19 @@ export default function CardCreate({ role, backPath }: Props) {
     if (data) setSystems(data)
   }
 
+  async function loadKanbans() {
+    const { data } = await supabase.from('kanbans').select('*').eq('role', role).order('created_at')
+    if (data) setKanbans(data)
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!title.trim() || !description.trim()) {
       alert('Título e descrição são obrigatórios!')
+      return
+    }
+    if (!kanbanId) {
+      alert('Selecione um kanban!')
       return
     }
     let finalSystemId = systemId
@@ -74,6 +87,7 @@ export default function CardCreate({ role, backPath }: Props) {
       description: description.trim(),
       photo_url: photoUrl,
       system_id: finalSystemId,
+      kanban_id: kanbanId,
       area: area.trim(),
       type,
       severity,
@@ -84,7 +98,7 @@ export default function CardCreate({ role, backPath }: Props) {
     if (error) {
       alert('Erro ao criar card: ' + error.message)
     } else {
-      navigate(backPath)
+      navigate(`${backPath}`)
     }
   }
 
@@ -103,10 +117,23 @@ export default function CardCreate({ role, backPath }: Props) {
       <h2 className="text-2xl font-bold">Novo Card - {role}</h2>
 
       <div>
+        <label className="block text-sm font-medium mb-1">Kanban *</label>
+        <select
+          value={kanbanId} onChange={(e) => setKanbanId(e.target.value)}
+          className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
+        >
+          <option value="">Selecione um kanban</option>
+          {kanbans.map((k) => (
+            <option key={k.id} value={k.id}>{k.name}</option>
+          ))}
+        </select>
+      </div>
+
+      <div>
         <label className="block text-sm font-medium mb-1">Título *</label>
         <input
           value={title} onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           placeholder="Título do card"
         />
       </div>
@@ -115,14 +142,14 @@ export default function CardCreate({ role, backPath }: Props) {
         <label className="block text-sm font-medium mb-1">Descrição do Problema *</label>
         <textarea
           value={description} onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none min-h-[100px]"
+          className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none min-h-[100px]"
           placeholder="Descreva o problema..."
         />
       </div>
 
       <div>
         <label className="block text-sm font-medium mb-1">Foto/Print (opcional)</label>
-        <label className="flex items-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800">
+        <label className="flex items-center gap-2 px-4 py-2 border border-border-strong rounded-lg cursor-pointer hover:bg-surface-hover">
           <Upload size={18} />
           <span>{photo ? photo.name : 'Selecionar arquivo'}</span>
           <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
@@ -138,14 +165,14 @@ export default function CardCreate({ role, backPath }: Props) {
           <button
             type="button"
             onClick={() => setShowNewSystem(false)}
-            className={`px-3 py-1 text-sm rounded ${!showNewSystem ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+            className={`px-3 py-1 text-sm rounded ${!showNewSystem ? 'bg-primary text-white' : 'bg-muted'}`}
           >
             Existente
           </button>
           <button
             type="button"
             onClick={() => setShowNewSystem(true)}
-            className={`px-3 py-1 text-sm rounded ${showNewSystem ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+            className={`px-3 py-1 text-sm rounded ${showNewSystem ? 'bg-primary text-white' : 'bg-muted'}`}
           >
             Novo Sistema
           </button>
@@ -153,13 +180,13 @@ export default function CardCreate({ role, backPath }: Props) {
         {showNewSystem ? (
           <input
             value={newSystem} onChange={(e) => setNewSystem(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+            className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
             placeholder="Nome do novo sistema"
           />
         ) : (
           <select
             value={systemId} onChange={(e) => setSystemId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+            className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="">Selecione um sistema</option>
             {systems.map((s) => (
@@ -173,7 +200,7 @@ export default function CardCreate({ role, backPath }: Props) {
         <label className="block text-sm font-medium mb-1">Área do Sistema *</label>
         <input
           value={area} onChange={(e) => setArea(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+          className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           placeholder="Ex: Módulo financeiro, Relatórios, etc."
         />
       </div>
@@ -183,7 +210,7 @@ export default function CardCreate({ role, backPath }: Props) {
           <label className="block text-sm font-medium mb-1">Tipo *</label>
           <select
             value={type} onChange={(e) => setType(e.target.value as 'Bug' | 'Inovação')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+            className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Bug">Bug</option>
             <option value="Inovação">Inovação</option>
@@ -193,7 +220,7 @@ export default function CardCreate({ role, backPath }: Props) {
           <label className="block text-sm font-medium mb-1">Severidade *</label>
           <select
             value={severity} onChange={(e) => setSeverity(e.target.value as 'Blocker' | 'Major' | 'Minor')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
+            className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Blocker">Blocker</option>
             <option value="Major">Major</option>

@@ -6,8 +6,15 @@
   --_pl: #fff7ed;
   --_pll: #ffedd5;
   --_pd: #9a3412;
-  --_s: #ffffff;
-  --_sm: #f9fafb;
+  --_bg: #f9fafb;
+  --_surface: #ffffff;
+  --_surface-hover: #f3f4f6;
+  --_muted: #f3f4f6;
+  --_txt: #111827;
+  --_txt-secondary: #6b7280;
+  --_txt-muted: #9ca3af;
+  --_border: #e5e7eb;
+  --_border-strong: #d1d5db;
 }
 
 .dark {
@@ -16,8 +23,15 @@
   --_pl: #431407;
   --_pll: #7c2d12;
   --_pd: #c2410c;
-  --_s: #111827;
-  --_sm: #1f2937;
+  --_bg: #030712;
+  --_surface: #111827;
+  --_surface-hover: #1f2937;
+  --_muted: #1f2937;
+  --_txt: #f3f4f6;
+  --_txt-secondary: #d1d5db;
+  --_txt-muted: #9ca3af;
+  --_border: #374151;
+  --_border-strong: #4b5563;
 }
 
 @theme {
@@ -26,6 +40,13 @@
   --color-primary-light: var(--_pl);
   --color-primary-lighter: var(--_pll);
   --color-primary-dark: var(--_pd);
-  --color-surface: var(--_s);
-  --color-surface-muted: var(--_sm);
+  --color-page: var(--_bg);
+  --color-surface: var(--_surface);
+  --color-surface-hover: var(--_surface-hover);
+  --color-muted: var(--_muted);
+  --color-text: var(--_txt);
+  --color-text-secondary: var(--_txt-secondary);
+  --color-text-muted: var(--_txt-muted);
+  --color-border: var(--_border);
+  --color-border-strong: var(--_border-strong);
 }

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Role, Card, Comment, Feedback } from '../types.ts'
-import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Send, ArrowLeft, CheckCircle, XCircle, MessageCircle } from 'lucide-react'
+import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Send, ArrowLeft, CheckCircle, XCircle, MessageCircle, Trash2 } from 'lucide-react'
 
 interface Props {
   role: Role
@@ -81,6 +81,13 @@ export default function CardDetail({ role }: Props) {
     }
   }
 
+  async function handleDeleteCard() {
+    if (!card) return
+    if (!confirm(`Deletar card "${card.title}"? Esta ação não pode ser desfeita.`)) return
+    const { error } = await supabase.from('cards').delete().eq('id', card.id)
+    if (!error) navigate(-1)
+  }
+
   async function handleNewCardFromReprovar() {
     const title = prompt('Título do novo card (relacionado a este):')
     if (!title) return
@@ -104,17 +111,17 @@ export default function CardDetail({ role }: Props) {
     }
   }
 
-  if (!card) return <div className="text-center py-12 text-gray-500">Carregando...</div>
+  if (!card) return <div className="text-center py-12 text-text-secondary">Carregando...</div>
 
   const statusLabels: Record<string, string> = { a_fazer: 'A Fazer', em_progresso: 'Em Progresso', concluido: 'Concluído', aprovado: 'Aprovado', reprovado: 'Reprovado' }
 
   return (
     <div className="max-w-3xl mx-auto">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 mb-4">
+      <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-text-secondary hover:text-text mb-4">
         <ArrowLeft size={16} /> Voltar
       </button>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6 mb-6">
+      <div className="bg-surface rounded-xl border border-border p-6 mb-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
             <span className={`px-2 py-0.5 text-xs font-medium rounded ${card.status === 'concluido' || card.status === 'aprovado' ? 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300' : card.status === 'reprovado' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300'}`}>
@@ -127,29 +134,29 @@ export default function CardDetail({ role }: Props) {
               {card.severity}
             </span>
           </div>
-          <span className="text-xs text-gray-400">{new Date(card.created_at).toLocaleString('pt-BR')}</span>
+          <span className="text-xs text-text-muted">{new Date(card.created_at).toLocaleString('pt-BR')}</span>
         </div>
 
         <h2 className="text-xl font-bold mb-2">{card.title}</h2>
-        <p className="text-gray-600 dark:text-gray-300 mb-4 whitespace-pre-wrap">{card.description}</p>
+        <p className="text-text mb-4 whitespace-pre-wrap">{card.description}</p>
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-          <div><span className="text-gray-500">Sistema:</span> <span className="font-medium">{card.system_name || 'N/A'}</span></div>
-          <div><span className="text-gray-500">Área:</span> <span className="font-medium">{card.area}</span></div>
-          <div><span className="text-gray-500">Papel:</span> <span className="font-medium">{card.role}</span></div>
+          <div><span className="text-text-secondary">Sistema:</span> <span className="font-medium">{card.system_name || 'N/A'}</span></div>
+          <div><span className="text-text-secondary">Área:</span> <span className="font-medium">{card.area}</span></div>
+          <div><span className="text-text-secondary">Papel:</span> <span className="font-medium">{card.role}</span></div>
           {card.parent_card_id && (
-            <div><span className="text-gray-500">Card relacionado:</span> <Link to={`/${card.role.toLowerCase()}/card/${card.parent_card_id}`} className="text-primary hover:underline">Ver original</Link></div>
+            <div><span className="text-text-secondary">Card relacionado:</span> <Link to={`/${card.role.toLowerCase()}/card/${card.parent_card_id}`} className="text-primary hover:underline">Ver original</Link></div>
           )}
         </div>
 
         {card.photo_url && (
           <div className="mb-4">
-            <img src={card.photo_url} alt="Anexo" className="max-h-80 rounded-lg object-contain bg-gray-100 dark:bg-gray-700" />
+            <img src={card.photo_url} alt="Anexo" className="max-h-80 rounded-lg object-contain bg-muted" />
           </div>
         )}
 
         {feedbacks.length > 0 && (
-          <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="mb-4 p-3 bg-muted rounded-lg">
             <p className="text-sm font-medium">
               {feedbacks[0].type === 'aprovado' ? (
                 <span className="text-green-600 dark:text-green-400"><CheckCircle size={16} className="inline mr-1" />Aprovado</span>
@@ -161,6 +168,11 @@ export default function CardDetail({ role }: Props) {
         )}
 
         <div className="flex gap-2">
+          {(card.status === 'aprovado' || card.status === 'reprovado') && (
+            <button onClick={handleDeleteCard} className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
+              <Trash2 size={16} /> Deletar Card
+            </button>
+          )}
           {(role === 'CS' || role === 'Comercial') && card.status === 'concluido' && feedbacks.length === 0 && (
             <>
               <button onClick={handleApprove} className="flex items-center gap-1 px-3 py-1.5 bg-emerald-600 text-white text-sm rounded-lg hover:bg-emerald-700 transition-colors">
@@ -179,25 +191,25 @@ export default function CardDetail({ role }: Props) {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
+      <div className="bg-surface rounded-xl border border-border p-6">
         <h3 className="font-semibold mb-4 flex items-center gap-2"><MessageCircle size={18} /> Comentários ({comments.length})</h3>
         <div className="space-y-3 mb-4 max-h-64 overflow-y-auto">
           {comments.map((c) => (
-            <div key={c.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-              <div className="flex items-center gap-2 text-xs text-gray-500 mb-1">
+            <div key={c.id} className="p-3 bg-muted rounded-lg">
+              <div className="flex items-center gap-2 text-xs text-text-secondary mb-1">
                 <span className={`px-1.5 py-0.5 rounded text-xs font-medium ${c.role === 'CS' ? 'bg-purple-100 text-purple-700' : c.role === 'Comercial' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>{c.role}</span>
                 <span>{new Date(c.created_at).toLocaleString('pt-BR')}</span>
               </div>
               <p className="text-sm">{c.content}</p>
             </div>
           ))}
-          {comments.length === 0 && <p className="text-sm text-gray-400 text-center py-4">Nenhum comentário ainda.</p>}
+          {comments.length === 0 && <p className="text-sm text-text-muted text-center py-4">Nenhum comentário ainda.</p>}
         </div>
         <div className="flex gap-2">
           <input
             value={newComment} onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none text-sm"
+            className="flex-1 px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none text-sm"
             placeholder="Adicionar comentário..."
           />
           <button

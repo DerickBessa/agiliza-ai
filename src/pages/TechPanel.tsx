@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
-import type { Card } from '../types.ts'
-import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Filter, Search, PlayCircle, CheckCircle } from 'lucide-react'
+import type { Card, Kanban } from '../types.ts'
+import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Filter, Search, PlayCircle, CheckCircle, LayoutDashboard, Trash2 } from 'lucide-react'
 
 const statusLabels: Record<string, string> = {
   a_fazer: 'A Fazer',
@@ -37,16 +37,20 @@ function sortCards(cards: Card[]) {
 }
 
 export default function TechPanel() {
+  const navigate = useNavigate()
   const [cards, setCards] = useState<Card[]>([])
+  const [kanbans, setKanbans] = useState<Kanban[]>([])
   const [systems, setSystems] = useState<{ id: string; name: string }[]>([])
   const [filterSystem, setFilterSystem] = useState('')
   const [filterType, setFilterType] = useState('')
   const [filterStatus, setFilterStatus] = useState('')
   const [search, setSearch] = useState('')
   const [updating, setUpdating] = useState<string | null>(null)
+  const [tab, setTab] = useState<'cards' | 'kanbans'>('cards')
 
   useEffect(() => {
     loadCards()
+    loadKanbans()
     loadSystems()
     const channel = supabase.channel('tech-cards')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, () => loadCards())
@@ -65,6 +69,11 @@ export default function TechPanel() {
     }
   }
 
+  async function loadKanbans() {
+    const { data } = await supabase.from('kanbans').select('*').order('created_at')
+    if (data) setKanbans(data)
+  }
+
   async function loadSystems() {
     const { data } = await supabase.from('systems').select('id, name').order('name')
     if (data) setSystems(data)
@@ -74,6 +83,13 @@ export default function TechPanel() {
     setUpdating(cardId)
     await supabase.from('cards').update({ status, updated_at: new Date().toISOString() }).eq('id', cardId)
     setUpdating(null)
+    loadCards()
+  }
+
+  async function handleDeleteKanban(kanban: Kanban) {
+    if (!confirm(`Deletar kanban "${kanban.name}"? Todos os cards associados serão deletados permanentemente.`)) return
+    await supabase.from('kanbans').delete().eq('id', kanban.id)
+    loadKanbans()
     loadCards()
   }
 
@@ -93,74 +109,127 @@ export default function TechPanel() {
 
   return (
     <div>
-      <h2 className="text-2xl font-bold mb-6">Painel Tech</h2>
-
-      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 mb-6">
-        <div className="flex flex-wrap gap-3 items-center">
-          <div className="flex items-center gap-1 text-sm text-gray-500"><Filter size={16} /> Filtros:</div>
-          <select value={filterSystem} onChange={(e) => setFilterSystem(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
-            <option value="">Todos os sistemas</option>
-            {systems.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-          <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
-            <option value="">Todos os tipos</option>
-            <option value="Bug">Bug</option>
-            <option value="Inovação">Inovação</option>
-          </select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800">
-            <option value="">Todos os status</option>
-            {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
-          </select>
-          <div className="flex items-center gap-1 flex-1 min-w-[200px]">
-            <Search size={16} className="text-gray-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="flex-1 px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800" />
-          </div>
-        </div>
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <h2 className="text-2xl font-bold">Painel Tech</h2>
+        <Link
+          to="/tech/kanban"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
+        >
+          <LayoutDashboard size={18} />
+          Kanban Arrastável
+        </Link>
       </div>
 
-      <div className="space-y-2">
-        {filtered.map((card) => (
-          <div key={card.id} className={`rounded-xl p-4 border border-gray-200 dark:border-gray-700 ${statusColors[card.status]}`}>
-            <div className="flex items-start justify-between gap-4 flex-wrap">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${getRoleColor(card.role)}`}>{card.role}</span>
-                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${card.type === 'Bug' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'}`}>
-                    {card.type === 'Bug' ? <><Bug size={12} className="inline mr-1" />Bug</> : <><Lightbulb size={12} className="inline mr-1" />Inovação</>}
-                  </span>
-                  <span className={`px-1.5 py-0.5 text-xs font-medium rounded flex items-center gap-1 ${card.severity === 'Blocker' ? 'bg-red-100 text-red-700' : card.severity === 'Major' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                    {card.severity === 'Blocker' ? <AlertTriangle size={12} /> : card.severity === 'Major' ? <ArrowUpCircle size={12} /> : <MinusCircle size={12} />}
-                    {card.severity}
-                  </span>
-                  <span className="text-xs text-gray-400">{statusLabels[card.status]}</span>
-                </div>
-                <Link to={`/tech/card/${card.id}`} className="text-base font-semibold hover:text-primary">{card.title}</Link>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{card.description}</p>
-                <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
-                  <span>{card.system_name}</span>
-                  <span>{card.area}</span>
-                  <span>{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
-                </div>
-              </div>
-              <div className="flex gap-2 shrink-0">
-                {card.status === 'a_fazer' && (
-                  <button onClick={() => updateStatus(card.id, 'em_progresso')} disabled={updating === card.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
-                    <PlayCircle size={16} /> Iniciar
-                  </button>
-                )}
-                {card.status === 'em_progresso' && (
-                  <button onClick={() => updateStatus(card.id, 'concluido')} disabled={updating === card.id} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
-                    <CheckCircle size={16} /> Concluir
-                  </button>
-                )}
+      <div className="flex gap-2 mb-6">
+        <button
+          onClick={() => setTab('cards')}
+          className={`px-4 py-2 text-sm rounded-lg transition-colors ${tab === 'cards' ? 'bg-primary text-white' : 'bg-surface border border-border hover:bg-surface-hover'}`}
+        >
+          Cards
+        </button>
+        <button
+          onClick={() => setTab('kanbans')}
+          className={`px-4 py-2 text-sm rounded-lg transition-colors ${tab === 'kanbans' ? 'bg-primary text-white' : 'bg-surface border border-border hover:bg-surface-hover'}`}
+        >
+          Gerenciar Kanbans
+        </button>
+      </div>
+
+      {tab === 'cards' && (
+        <>
+          <div className="bg-surface rounded-xl border border-border p-4 mb-6">
+            <div className="flex flex-wrap gap-3 items-center">
+              <div className="flex items-center gap-1 text-sm text-text-secondary"><Filter size={16} /> Filtros:</div>
+              <select value={filterSystem} onChange={(e) => setFilterSystem(e.target.value)} className="px-3 py-1.5 text-sm border border-border-strong rounded-lg bg-surface">
+                <option value="">Todos os sistemas</option>
+                {systems.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              <select value={filterType} onChange={(e) => setFilterType(e.target.value)} className="px-3 py-1.5 text-sm border border-border-strong rounded-lg bg-surface">
+                <option value="">Todos os tipos</option>
+                <option value="Bug">Bug</option>
+                <option value="Inovação">Inovação</option>
+              </select>
+              <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="px-3 py-1.5 text-sm border border-border-strong rounded-lg bg-surface">
+                <option value="">Todos os status</option>
+                {Object.entries(statusLabels).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
+              </select>
+              <div className="flex items-center gap-1 flex-1 min-w-[200px]">
+                <Search size={16} className="text-text-muted" />
+                <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar..." className="flex-1 px-3 py-1.5 text-sm border border-border-strong rounded-lg bg-surface" />
               </div>
             </div>
           </div>
-        ))}
-        {filtered.length === 0 && (
-          <p className="text-center py-12 text-gray-500">Nenhum card encontrado.</p>
-        )}
-      </div>
+
+          <div className="space-y-2">
+            {filtered.map((card) => (
+              <div key={card.id} className={`rounded-xl p-4 border border-border ${statusColors[card.status]}`}>
+                <div className="flex items-start justify-between gap-4 flex-wrap">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${getRoleColor(card.role)}`}>{card.role}</span>
+                      <span className={`px-1.5 py-0.5 text-xs font-medium rounded ${card.type === 'Bug' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'}`}>
+                        {card.type === 'Bug' ? <><Bug size={12} className="inline mr-1" />Bug</> : <><Lightbulb size={12} className="inline mr-1" />Inovação</>}
+                      </span>
+                      <span className={`px-1.5 py-0.5 text-xs font-medium rounded flex items-center gap-1 ${card.severity === 'Blocker' ? 'bg-red-100 text-red-700' : card.severity === 'Major' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                        {card.severity === 'Blocker' ? <AlertTriangle size={12} /> : card.severity === 'Major' ? <ArrowUpCircle size={12} /> : <MinusCircle size={12} />}
+                        {card.severity}
+                      </span>
+                      <span className="text-xs text-text-muted">{statusLabels[card.status]}</span>
+                    </div>
+                    <Link to={`/tech/card/${card.id}`} className="text-base font-semibold hover:text-primary">{card.title}</Link>
+                    <p className="text-sm text-text-secondary mt-1 line-clamp-1">{card.description}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-text-muted">
+                      <span>{card.system_name}</span>
+                      <span>{card.area}</span>
+                      <span>{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
+                    </div>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    {card.status === 'a_fazer' && (
+                      <button onClick={() => updateStatus(card.id, 'em_progresso')} disabled={updating === card.id} className="flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                        <PlayCircle size={16} /> Iniciar
+                      </button>
+                    )}
+                    {card.status === 'em_progresso' && (
+                      <button onClick={() => updateStatus(card.id, 'concluido')} disabled={updating === card.id} className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors">
+                        <CheckCircle size={16} /> Concluir
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {filtered.length === 0 && (
+              <p className="text-center py-12 text-text-secondary">Nenhum card encontrado.</p>
+            )}
+          </div>
+        </>
+      )}
+
+      {tab === 'kanbans' && (
+        <div className="space-y-3">
+          <p className="text-text-secondary text-sm mb-4">Gerencie os kanbans de todos os times. A deleção remove todos os cards associados.</p>
+          <div className="grid gap-3 md:grid-cols-2">
+            {kanbans.map((kanban) => (
+              <div key={kanban.id} className="flex items-center gap-4 p-4 bg-surface rounded-xl border border-border">
+                <div className="flex-1">
+                  <p className="font-semibold">{kanban.name}</p>
+                  <p className="text-sm text-text-muted">{kanban.role} • {new Date(kanban.created_at).toLocaleDateString('pt-BR')}</p>
+                </div>
+                <button
+                  onClick={() => handleDeleteKanban(kanban)}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  <Trash2 size={14} /> Deletar
+                </button>
+              </div>
+            ))}
+          </div>
+          {kanbans.length === 0 && (
+            <p className="text-center py-12 text-text-secondary">Nenhum kanban encontrado.</p>
+          )}
+        </div>
+      )}
     </div>
   )
 }

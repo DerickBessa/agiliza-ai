@@ -11,6 +11,13 @@ export interface System {
   created_at: string
 }
 
+export interface Kanban {
+  id: string
+  name: string
+  role: Role
+  created_at: string
+}
+
 export interface Card {
   id: string
   role: Role
@@ -23,6 +30,7 @@ export interface Card {
   severity: Severity
   status: CardStatus
   parent_card_id: string | null
+  kanban_id: string | null
   created_at: string
   updated_at: string
   system_name?: string
