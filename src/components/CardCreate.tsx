@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
-import type { Role, System, Kanban } from '../types.ts'
+import type { Role, System, Kanban, Severity } from '../types.ts'
 import { Upload, Send } from 'lucide-react'
 
 interface Props {
@@ -22,7 +22,7 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
   const [kanbanId, setKanbanId] = useState(selectedKanbanId || '')
   const [area, setArea] = useState('')
   const [type, setType] = useState<'Bug' | 'Inovação'>('Bug')
-  const [severity, setSeverity] = useState<'Blocker' | 'Major' | 'Minor'>('Minor')
+  const [severity, setSeverity] = useState<Severity>('bug')
   const [newSystem, setNewSystem] = useState('')
   const [showNewSystem, setShowNewSystem] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -217,14 +217,14 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium mb-1">Severidade *</label>
+          <label className="block text-sm font-medium mb-1">Tipo de Tarefa *</label>
           <select
-            value={severity} onChange={(e) => setSeverity(e.target.value as 'Blocker' | 'Major' | 'Minor')}
+            value={severity} onChange={(e) => setSeverity(e.target.value as Severity)}
             className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
           >
-            <option value="Blocker">Blocker</option>
-            <option value="Major">Major</option>
-            <option value="Minor">Minor</option>
+            <option value="bug">Bug</option>
+            <option value="melhoria">Melhoria</option>
+            <option value="sugestao">Sugestão</option>
           </select>
         </div>
       </div>

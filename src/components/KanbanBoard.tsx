@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Role, Card } from '../types.ts'
-import { Plus, Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Trash2 } from 'lucide-react'
+import { Plus, Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Trash2, User } from 'lucide-react'
 
 interface Props {
   role: Role
@@ -28,10 +28,10 @@ const statusColors: Record<string, string> = {
   reprovado: 'bg-red-100/20 dark:bg-red-900/35',
 }
 
-const severityIcons: Record<string, React.ReactNode> = {
-  Blocker: <AlertTriangle size={16} className="text-red-500" />,
-  Major: <ArrowUpCircle size={16} className="text-orange-500" />,
-  Minor: <MinusCircle size={16} className="text-yellow-500" />,
+const tipoIcons: Record<string, React.ReactNode> = {
+  bug: <Bug size={14} className="text-red-500" />,
+  melhoria: <ArrowUpCircle size={14} className="text-blue-500" />,
+  sugestao: <Lightbulb size={14} className="text-amber-500" />,
 }
 
 export default function KanbanBoard({ role, kanbanId, createPath, cardDetailPath, onDeleteCard }: Props) {
@@ -118,14 +118,16 @@ export default function KanbanBoard({ role, kanbanId, createPath, cardDetailPath
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <span className="text-xs font-medium text-text-secondary">{card.system_name || 'Sistema'}</span>
                     <div className="flex items-center gap-1 shrink-0">
-                      {card.type === 'Bug' ? <Bug size={14} className="text-red-500" /> : <Lightbulb size={14} className="text-amber-500" />}
-                      {severityIcons[card.severity]}
+                      {tipoIcons[card.severity] || <Bug size={14} className="text-gray-400" />}
                     </div>
                   </div>
                   <p className="text-sm font-medium leading-tight line-clamp-2">{card.title}</p>
                   <div className="flex items-center gap-2 mt-2 text-xs text-text-muted">
                     <span>{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
                     <span>{card.area}</span>
+                    {card.resolved_by && (
+                      <span className="flex items-center gap-0.5"><User size={10} />{card.resolved_by}</span>
+                    )}
                   </div>
                 </Link>
               ))}

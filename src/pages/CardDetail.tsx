@@ -2,10 +2,22 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Role, Card, Comment, Feedback } from '../types.ts'
-import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Send, ArrowLeft, CheckCircle, XCircle, MessageCircle, Trash2 } from 'lucide-react'
+import { Bug, Lightbulb, AlertTriangle, ArrowUpCircle, MinusCircle, Send, ArrowLeft, CheckCircle, XCircle, MessageCircle, Trash2, User, Save } from 'lucide-react'
 
 interface Props {
   role: Role
+}
+
+const tipoLabels: Record<string, string> = {
+  bug: 'Bug',
+  melhoria: 'Melhoria',
+  sugestao: 'Sugestão',
+}
+
+const tipoColors: Record<string, string> = {
+  bug: 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300',
+  melhoria: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  sugestao: 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300',
 }
 
 export default function CardDetail({ role }: Props) {
@@ -17,6 +29,8 @@ export default function CardDetail({ role }: Props) {
   const [newComment, setNewComment] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [showReprovarForm, setShowReprovarForm] = useState(false)
+  const [resolvedBy, setResolvedBy] = useState('')
+  const [savingResolved, setSavingResolved] = useState(false)
 
   useEffect(() => {
     if (!id) return
@@ -34,7 +48,10 @@ export default function CardDetail({ role }: Props) {
 
   async function loadCard() {
     const { data } = await supabase.from('cards').select('*, systems(name)').eq('id', id).single()
-    if (data) setCard({ ...data, system_name: data.systems?.name })
+    if (data) {
+      setCard({ ...data, system_name: data.systems?.name })
+      setResolvedBy(data.resolved_by || '')
+    }
   }
 
   async function loadComments() {
@@ -62,21 +79,30 @@ export default function CardDetail({ role }: Props) {
     }
   }
 
+  async function handleSaveResolvedBy() {
+    setSavingResolved(true)
+    await supabase.from('cards').update({ resolved_by: resolvedBy }).eq('id', id)
+    setSavingResolved(false)
+  }
+
   async function handleApprove() {
+    await supabase.from('cards').update({ status: 'aprovado', updated_at: new Date().toISOString() }).eq('id', id)
     const { error } = await supabase.from('feedbacks').insert({
       card_id: id,
       type: 'aprovado',
     })
-    if (!error) loadFeedbacks()
+    if (!error) { loadFeedbacks(); loadCard() }
   }
 
   async function handleReprovar() {
+    await supabase.from('cards').update({ status: 'reprovado', updated_at: new Date().toISOString() }).eq('id', id)
     const { error } = await supabase.from('feedbacks').insert({
       card_id: id,
       type: 'reprovado',
     })
     if (!error) {
       loadFeedbacks()
+      loadCard()
       setShowReprovarForm(true)
     }
   }
@@ -100,7 +126,7 @@ export default function CardDetail({ role }: Props) {
       system_id: card?.system_id,
       area: card?.area || '',
       type: card?.type || 'Bug',
-      severity: card?.severity || 'Minor',
+      severity: card?.severity || 'bug',
       status: 'a_fazer',
       parent_card_id: id,
     })
@@ -130,8 +156,8 @@ export default function CardDetail({ role }: Props) {
             <span className={`px-2 py-0.5 text-xs font-medium rounded ${card.type === 'Bug' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300'}`}>
               {card.type === 'Bug' ? <><Bug size={12} className="inline mr-1" />Bug</> : <><Lightbulb size={12} className="inline mr-1" />Inovação</>}
             </span>
-            <span className={`px-2 py-0.5 text-xs font-medium rounded ${card.severity === 'Blocker' ? 'bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300' : card.severity === 'Major' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900 dark:text-orange-300' : 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300'}`}>
-              {card.severity}
+            <span className={`px-2 py-0.5 text-xs font-medium rounded ${tipoColors[card.severity] || 'bg-gray-100 text-gray-600'}`}>
+              {tipoLabels[card.severity] || card.severity}
             </span>
           </div>
           <span className="text-xs text-text-muted">{new Date(card.created_at).toLocaleString('pt-BR')}</span>
@@ -144,6 +170,7 @@ export default function CardDetail({ role }: Props) {
           <div><span className="text-text-secondary">Sistema:</span> <span className="font-medium">{card.system_name || 'N/A'}</span></div>
           <div><span className="text-text-secondary">Área:</span> <span className="font-medium">{card.area}</span></div>
           <div><span className="text-text-secondary">Papel:</span> <span className="font-medium">{card.role}</span></div>
+          <div><span className="text-text-secondary">Tipo de Tarefa:</span> <span className="font-medium">{tipoLabels[card.severity] || card.severity}</span></div>
           {card.parent_card_id && (
             <div><span className="text-text-secondary">Card relacionado:</span> <Link to={`/${card.role.toLowerCase()}/card/${card.parent_card_id}`} className="text-primary hover:underline">Ver original</Link></div>
           )}
@@ -154,6 +181,26 @@ export default function CardDetail({ role }: Props) {
             <img src={card.photo_url} alt="Anexo" className="max-h-80 rounded-lg object-contain bg-muted" />
           </div>
         )}
+
+        <div className="mb-4 p-3 bg-muted rounded-lg">
+          <div className="flex items-center gap-2">
+            <User size={14} className="text-text-secondary" />
+            <span className="text-sm font-medium text-text-secondary">Responsável:</span>
+            <input
+              value={resolvedBy}
+              onChange={(e) => setResolvedBy(e.target.value)}
+              className="flex-1 px-2 py-1 text-sm bg-surface border border-border-strong rounded-lg focus:ring-2 focus:ring-primary outline-none"
+              placeholder="Nome do desenvolvedor"
+            />
+            <button
+              onClick={handleSaveResolvedBy}
+              disabled={savingResolved}
+              className="p-1.5 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
+            >
+              <Save size={14} />
+            </button>
+          </div>
+        </div>
 
         {feedbacks.length > 0 && (
           <div className="mb-4 p-3 bg-muted rounded-lg">

@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import type { Role } from '../types.ts'
-import { ArrowLeft, Moon, Sun, LogOut } from 'lucide-react'
+import { ArrowLeft, Moon, Sun, LogOut, FileText, BarChart3 } from 'lucide-react'
 
 export default function Layout() {
   const location = useLocation()
@@ -40,9 +40,11 @@ export default function Layout() {
             </div>
           )}
           {role === 'Tech' && (
-            <div className="flex gap-2 text-sm">
+            <div className="flex gap-2 text-sm items-center">
               <Link to="/tech" className={`px-3 py-1.5 rounded ${location.pathname === '/tech' ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Painel</Link>
               <Link to="/tech/kanban" className={`px-3 py-1.5 rounded ${location.pathname.startsWith('/tech/kanban') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban</Link>
+              <Link to="/tech/relatorio" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/relatorio') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><FileText size={14} /> Relatório</Link>
+              <Link to="/tech/dashboard" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/dashboard') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><BarChart3 size={14} /> Dashboard</Link>
             </div>
           )}
           {role === 'Tech' && (
