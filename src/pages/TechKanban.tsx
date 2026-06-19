@@ -84,7 +84,7 @@ export default function TechKanban() {
             key={status}
             onDragOver={(e) => e.preventDefault()}
             onDrop={() => handleDrop(status)}
-            className={`rounded-xl p-3 min-h-[200px] transition-colors border border-border/50 shadow-sm ${status === 'a_fazer' ? 'bg-gray-50 dark:bg-gray-800/80' : status === 'em_progresso' ? 'bg-blue-50 dark:bg-blue-950' : status === 'concluido' ? 'bg-green-50 dark:bg-green-950' : status === 'aprovado' ? 'bg-emerald-50 dark:bg-emerald-950' : 'bg-red-50 dark:bg-red-950'}`}
+            className={`rounded-xl p-3 min-h-[200px] transition-colors border border-border/50 shadow-sm ${status === 'a_fazer' ? 'bg-gray-100/20 dark:bg-gray-800/30' : status === 'em_progresso' ? 'bg-blue-100/20 dark:bg-blue-900/35' : status === 'concluido' ? 'bg-green-100/20 dark:bg-green-900/35' : status === 'aprovado' ? 'bg-emerald-100/20 dark:bg-emerald-900/35' : 'bg-red-100/20 dark:bg-red-900/35'}`}
           >
             <h3 className="font-semibold text-sm mb-3 text-center">{statusLabels[status]} ({grouped[status]?.length || 0})</h3>
             <div className="space-y-3">

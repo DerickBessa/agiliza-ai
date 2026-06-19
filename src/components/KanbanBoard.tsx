@@ -21,11 +21,11 @@ const statusLabels: Record<string, string> = {
   reprovado: 'Reprovado',
 }
 const statusColors: Record<string, string> = {
-  a_fazer: 'bg-gray-50 dark:bg-gray-800/80',
-  em_progresso: 'bg-blue-50 dark:bg-blue-950',
-  concluido: 'bg-green-50 dark:bg-green-950',
-  aprovado: 'bg-emerald-50 dark:bg-emerald-950',
-  reprovado: 'bg-red-50 dark:bg-red-950',
+  a_fazer: 'bg-gray-100/20 dark:bg-gray-800/30',
+  em_progresso: 'bg-blue-100/20 dark:bg-blue-900/35',
+  concluido: 'bg-green-100/20 dark:bg-green-900/35',
+  aprovado: 'bg-emerald-100/20 dark:bg-emerald-900/35',
+  reprovado: 'bg-red-100/20 dark:bg-red-900/35',
 }
 
 const severityIcons: Record<string, React.ReactNode> = {
