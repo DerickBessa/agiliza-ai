@@ -6,7 +6,7 @@ Kanban-style card management platform for 3 teams (CS, Comercial, Tech). Built w
 **URL:** https://agiliza-ai-sigma.vercel.app
 
 ## Stack
-- **Frontend:** React 19, React Router v6, Vite 8, Tailwind CSS v4
+- **Frontend:** React 19, React Router v6, Vite 8, Tailwind CSS v4, Recharts
 - **Backend:** Supabase (PostgreSQL, Realtime, Storage)
 - **Deploy:** Vercel (SPA with rewrites in `vercel.json`)
 - **Auth:** Password-protected per role (env vars, no real auth)
@@ -15,7 +15,7 @@ Kanban-style card management platform for 3 teams (CS, Comercial, Tech). Built w
 ```
 src/
   components/     Reusable UI (CardCreate, KanbanBoard, PasswordModal, Layout, KanbanSelector)
-  pages/          Route pages (RoleSelect, TechPanel, TechDashboard, TechReport, TechKanban, CSKanban, ComercialKanban, CardDetail)
+  pages/          Route pages (RoleSelect, TechPanel, TechDashboard, TechKanban, CSKanban, ComercialKanban, CardDetail)
   lib/            Supabase client
   types.ts        Shared TS types
   index.css       Global styles (CSS variables, dark mode, @theme)
@@ -50,9 +50,8 @@ a_fazer → em_progresso → concluido → aprovado (by CS/Comercial)
 ### Multi-Kanban
 Each role can have multiple kanbans (e.g., "Geral", "Sprint 1"). Cards belong to one kanban.
 
-### Tech Dashboard & Report
-- `/tech/relatorio` — Monthly/annual report of approved cards grouped by developer. Print-to-PDF.
-- `/tech/dashboard` — Password-protected. Shows card age, dev productivity with CSS bar charts, severity-type metrics.
+### Tech Dashboard
+- `/tech/dashboard` — Password-protected dashboard with Recharts (tendência mensal, distribuição por status, produtividade por dev, cards por sistema), severity metrics, card age list. Includes an overlay report view (per-developer approved cards breakdown) with print support.
 
 ## CSS Conventions
 - All colors via CSS variables (`--_p`, `--_bg`, `--_txt`, etc.) mapped through `@theme`
@@ -105,7 +104,7 @@ supabase db push --linked        # apply to remote
 - [ ] No real auth system — passwords are client-side and visible in JS bundle
 - [ ] No route guards — anyone can navigate to any path if they know the URL
 - [ ] No developer/team table — `resolved_by` is free text
-- [ ] No server-side filtering on reports — all data fetched client-side
+- [ ] No server-side filtering on dashboard — all data fetched client-side
 - [ ] No loading skeletons or error boundaries
 - [ ] No tests
 - [ ] No TypeScript strict mode

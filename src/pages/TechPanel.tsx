@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Card, Kanban } from '../types.ts'
-import { Plus, Bug, Lightbulb, ArrowUpCircle, Columns, FileText, BarChart3, X, GripVertical, User } from 'lucide-react'
+import { Plus, Bug, Lightbulb, ArrowUpCircle, Columns, BarChart3, X, GripVertical, User } from 'lucide-react'
 
 interface DragItem {
   cardId: string
@@ -90,12 +90,6 @@ export default function TechPanel() {
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">Tech Panel</h2>
         <div className="flex items-center gap-2">
-          <Link
-            to="/tech/relatorio"
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-strong rounded-lg hover:bg-surface-hover text-sm transition-colors"
-          >
-            <FileText size={16} /> Relatório
-          </Link>
           <Link
             to="/tech/dashboard"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-strong rounded-lg hover:bg-surface-hover text-sm transition-colors"

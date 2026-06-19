@@ -1,17 +1,21 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 import type { Role } from '../types.ts'
-import { ArrowLeft, Moon, Sun, LogOut, FileText, BarChart3 } from 'lucide-react'
+import { ArrowLeft, Moon, Sun, LogOut, BarChart3 } from 'lucide-react'
+
+function useRoleFromPath(pathname: string): Role | null {
+  if (pathname === '/' || pathname === '/login') return null
+  if (pathname.startsWith('/cs')) return 'CS'
+  if (pathname.startsWith('/comercial')) return 'Comercial'
+  if (pathname.startsWith('/tech')) return 'Tech'
+  return null
+}
 
 export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const isRoot = location.pathname === '/' || location.pathname === '/login'
-  const role: Role | null = !isRoot
-    ? location.pathname.startsWith('/cs') ? 'CS'
-      : location.pathname.startsWith('/comercial') ? 'Comercial'
-      : 'Tech'
-    : null
+  const role: Role | null = useRoleFromPath(location.pathname)
   const [dark, setDark] = useState(() => localStorage.getItem('dark') !== 'false')
 
   const toggleDark = () => {
@@ -51,7 +55,6 @@ export default function Layout() {
               <div className="flex gap-2 text-sm items-center">
                 <Link to="/tech" className={`px-3 py-1.5 rounded ${location.pathname === '/tech' ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Painel</Link>
                 <Link to="/tech/kanban" className={`px-3 py-1.5 rounded ${location.pathname.startsWith('/tech/kanban') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban</Link>
-                <Link to="/tech/relatorio" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/relatorio') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><FileText size={14} /> Relatório</Link>
                 <Link to="/tech/dashboard" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/dashboard') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><BarChart3 size={14} /> Dashboard</Link>
               </div>
             )}

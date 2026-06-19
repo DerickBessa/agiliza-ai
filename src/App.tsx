@@ -7,7 +7,6 @@ import CardCreate from './components/CardCreate.tsx'
 import CardDetail from './pages/CardDetail.tsx'
 import TechPanel from './pages/TechPanel.tsx'
 import TechKanban from './pages/TechKanban.tsx'
-import TechReport from './pages/TechReport.tsx'
 import TechDashboard from './pages/TechDashboard.tsx'
 import KanbanSelector from './components/KanbanSelector.tsx'
 import type { Role } from './types.ts'
@@ -28,7 +27,6 @@ function App() {
           <Route path="tech/kanban/:id" element={<TechKanbanPage />} />
           <Route path="tech/new" element={<CardCreate role="Tech" backPath="/tech" />} />
           <Route path="tech/card/:id" element={<CardDetail role="Tech" />} />
-          <Route path="tech/relatorio" element={<TechReport />} />
           <Route path="tech/dashboard" element={<TechDashboard />} />
           <Route path="cs/card/:id" element={<CardDetail role="CS" />} />
           <Route path="comercial/card/:id" element={<CardDetail role="Comercial" />} />
