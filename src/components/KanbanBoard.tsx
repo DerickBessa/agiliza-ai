@@ -126,7 +126,7 @@ export default function KanbanBoard({ role, kanbanId, createPath, cardDetailPath
                     <span>{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
                     <span>{card.area}</span>
                     {card.resolved_by && (
-                      <span className="flex items-center gap-0.5"><User size={10} />{card.resolved_by}</span>
+                      <span className="flex items-center gap-0.5 max-w-24 truncate" title={card.resolved_by}><User size={10} />{card.resolved_by}</span>
                     )}
                   </div>
                 </Link>
