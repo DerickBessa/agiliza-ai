@@ -3,21 +3,20 @@ import { useNavigate } from 'react-router-dom'
 import { Headset, ShoppingBag, Wrench } from 'lucide-react'
 import PasswordModal from '../components/PasswordModal.tsx'
 
-const TECH_TOKEN_KEY = 'tech_access_token'
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
 
-function getStoredToken(): string | null {
-  const raw = localStorage.getItem(TECH_TOKEN_KEY)
+function getStoredToken(key: string): string | null {
+  const raw = localStorage.getItem(key)
   if (!raw) return null
   try {
     const { expiresAt } = JSON.parse(raw)
     if (Date.now() > expiresAt) {
-      localStorage.removeItem(TECH_TOKEN_KEY)
+      localStorage.removeItem(key)
       return null
     }
     return raw
   } catch {
-    localStorage.removeItem(TECH_TOKEN_KEY)
+    localStorage.removeItem(key)
     return null
   }
 }
@@ -28,16 +27,48 @@ const cardStyle: React.CSSProperties = {
   boxShadow: '0 4px 14px rgba(0,0,0,0.1)',
 }
 
+type ModalState = 'cs' | 'comercial' | 'tech' | null
+
 export default function RoleSelect() {
   const navigate = useNavigate()
-  const [techModalOpen, setTechModalOpen] = useState(false)
+  const [modal, setModal] = useState<ModalState>(null)
 
   useEffect(() => {
-    const token = getStoredToken()
-    if (token) {
-      navigate('/tech')
-    }
+    if (getStoredToken('cs_access_token')) navigate('/cs/kanban')
+    else if (getStoredToken('comercial_access_token')) navigate('/comercial/kanban')
+    else if (getStoredToken('tech_access_token')) navigate('/tech')
   }, [])
+
+  function handleSuccess(role: 'CS' | 'Comercial' | 'Tech', remember: boolean) {
+    const tokenKey = role === 'CS' ? 'cs_access_token' : role === 'Comercial' ? 'comercial_access_token' : 'tech_access_token'
+    const path = role === 'Tech' ? '/tech' : `/${role.toLowerCase()}/kanban`
+    setModal(null)
+    if (remember) {
+      localStorage.setItem(tokenKey, JSON.stringify({ expiresAt: Date.now() + SEVEN_DAYS_MS }))
+    }
+    navigate(path)
+  }
+
+  const modalConfig: Record<string, { title: string; description: string; password: string; color: string }> = {
+    cs: {
+      title: 'Acesso CS',
+      description: 'Digite a senha para acessar o painel de Suporte ao Cliente.',
+      password: import.meta.env.VITE_CS_PASSWORD,
+      color: 'purple',
+    },
+    comercial: {
+      title: 'Acesso Comercial',
+      description: 'Digite a senha para acessar o painel de Vendas e Negócios.',
+      password: import.meta.env.VITE_COMERCIAL_PASSWORD,
+      color: 'green',
+    },
+    tech: {
+      title: 'Acesso Tech',
+      description: 'Digite a senha para acessar o painel da equipe técnica.',
+      password: import.meta.env.VITE_TECH_PASSWORD,
+      color: 'blue',
+    },
+  }
 
   return (
     <div className="fixed inset-0 z-0 bg-gradient-to-br from-primary-light to-page text-text flex flex-col items-center justify-center p-4">
@@ -46,9 +77,9 @@ export default function RoleSelect() {
         <p className="text-text-secondary text-lg">Selecione seu papel</p>
       </div>
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">
-        {/* CS — desliza pra esquerda */}
+        {/* CS */}
         <button
-          onClick={() => navigate('/cs/kanban')}
+          onClick={() => setModal('cs')}
           className={cardBase}
           style={cardStyle}
           onMouseEnter={(e) => {
@@ -67,9 +98,9 @@ export default function RoleSelect() {
           <span className="text-sm text-text-secondary">Suporte ao Cliente</span>
         </button>
 
-        {/* Comercial — desliza pra direita */}
+        {/* Comercial */}
         <button
-          onClick={() => navigate('/comercial/kanban')}
+          onClick={() => setModal('comercial')}
           className={cardBase}
           style={cardStyle}
           onMouseEnter={(e) => {
@@ -88,9 +119,9 @@ export default function RoleSelect() {
           <span className="text-sm text-text-secondary">Vendas e Negócios</span>
         </button>
 
-        {/* Tech — sobe reto */}
+        {/* Tech */}
         <button
-          onClick={() => setTechModalOpen(true)}
+          onClick={() => setModal('tech')}
           className={cardBase}
           style={cardStyle}
           onMouseEnter={(e) => {
@@ -110,20 +141,19 @@ export default function RoleSelect() {
         </button>
       </div>
 
-      <PasswordModal
-        open={techModalOpen}
-        onClose={() => setTechModalOpen(false)}
-        onSuccess={(remember) => {
-          setTechModalOpen(false)
-          if (remember) {
-            localStorage.setItem(TECH_TOKEN_KEY, JSON.stringify({ expiresAt: Date.now() + SEVEN_DAYS_MS }))
-          }
-          navigate('/tech')
-        }}
-        title="Acesso Tech"
-        description="Digite a senha para acessar o painel da equipe técnica."
-        correctPassword={import.meta.env.VITE_TECH_PASSWORD}
-      />
+      {modal && (
+        <PasswordModal
+          open={true}
+          onClose={() => setModal(null)}
+          onSuccess={(remember) => handleSuccess(
+            modal === 'cs' ? 'CS' : modal === 'comercial' ? 'Comercial' : 'Tech',
+            remember
+          )}
+          title={modalConfig[modal].title}
+          description={modalConfig[modal].description}
+          correctPassword={modalConfig[modal].password}
+        />
+      )}
     </div>
   )
 }
