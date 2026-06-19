@@ -60,11 +60,18 @@ export default function Layout() {
                 <Link to="/tech/dashboard" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/dashboard') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><BarChart3 size={14} /> Dashboard</Link>
               </div>
             )}
-            {role === 'Tech' && (
+            {role && (
               <button
-                onClick={() => { localStorage.removeItem('tech_access_token'); navigate('/login') }}
+                onClick={() => {
+                  localStorage.removeItem('tech_access_token')
+                  localStorage.removeItem('cs_access_token')
+                  localStorage.removeItem('comercial_access_token')
+                  localStorage.removeItem('tech_dashboard_token')
+                  localStorage.removeItem('tech_dashboard_expiry')
+                  navigate('/login')
+                }}
                 className="p-2 hover:bg-surface-hover rounded text-text-secondary hover:text-text transition-colors"
-                title="Sair da conta Tech"
+                title="Sair"
               >
                 <LogOut size={18} />
               </button>
