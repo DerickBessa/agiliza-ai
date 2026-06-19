@@ -17,7 +17,8 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Layout />}>
-          <Route index element={<RoleSelect />} />
+          <Route index element={<Navigate to="/login" replace />} />
+          <Route path="login" element={<RoleSelect />} />
           <Route path="cs/kanban" element={<CSKanban />} />
           <Route path="cs/kanban/:kanbanId" element={<CSKanban />} />
           <Route path="comercial/kanban" element={<ComercialKanban />} />
@@ -33,7 +34,7 @@ function App() {
           <Route path="comercial/card/:id" element={<CardDetail role="Comercial" />} />
           <Route path="cs/criar/:kanbanId" element={<CSCardCreatePage />} />
           <Route path="comercial/criar/:kanbanId" element={<ComercialCardCreatePage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Route>
       </Routes>
     </BrowserRouter>
