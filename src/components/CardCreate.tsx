@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Role, System, Kanban, Severity } from '../types.ts'
@@ -18,6 +18,9 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
   const [description, setDescription] = useState('')
   const [photo, setPhoto] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState('')
+  const [video, setVideo] = useState<File | null>(null)
+  const [videoPreview, setVideoPreview] = useState('')
+  const videoUrlRef = useRef('')
   const [systemId, setSystemId] = useState('')
   const [kanbanId, setKanbanId] = useState(selectedKanbanId || '')
   const [area, setArea] = useState('')
@@ -30,6 +33,48 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
   useEffect(() => {
     loadSystems()
     loadKanbans()
+  }, [])
+
+  useEffect(() => {
+    const onPaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items
+      if (!items) return
+      for (let i = 0; i < items.length; i++) {
+        const item = items[i]
+        if (item.type.startsWith('image/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) {
+            setPhoto(file)
+            setVideo(null)
+            if (videoUrlRef.current) { URL.revokeObjectURL(videoUrlRef.current); videoUrlRef.current = '' }
+            setVideoPreview('')
+            const reader = new FileReader()
+            reader.onload = (ev) => setPhotoPreview(ev.target?.result as string)
+            reader.readAsDataURL(file)
+          }
+          return
+        } else if (item.type.startsWith('video/')) {
+          e.preventDefault()
+          const file = item.getAsFile()
+          if (file) {
+            setVideo(file)
+            setPhoto(null)
+            setPhotoPreview('')
+            if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current)
+            const url = URL.createObjectURL(file)
+            videoUrlRef.current = url
+            setVideoPreview(url)
+          }
+          return
+        }
+      }
+    }
+    document.addEventListener('paste', onPaste)
+    return () => {
+      document.removeEventListener('paste', onPaste)
+      if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current)
+    }
   }, [])
 
   async function loadSystems() {
@@ -73,7 +118,7 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
       const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
       const { error: uploadError } = await supabase.storage.from('card-photos').upload(fileName, photo)
       if (uploadError) {
-        alert('Erro ao fazer upload: ' + uploadError.message)
+        alert('Erro ao fazer upload de imagem: ' + uploadError.message)
         setSubmitting(false)
         return
       }
@@ -81,11 +126,27 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
       photoUrl = urlData.publicUrl
     }
 
+    let videoUrl: string | null = null
+    if (video) {
+      const fileExt = video.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+      const { error: uploadError } = await supabase.storage.from('card-photos').upload(fileName, video)
+      if (uploadError) {
+        alert('Erro ao fazer upload de vídeo: ' + uploadError.message)
+        setSubmitting(false)
+        if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current)
+        return
+      }
+      const { data: urlData } = supabase.storage.from('card-photos').getPublicUrl(fileName)
+      videoUrl = urlData.publicUrl
+    }
+
     const { error } = await supabase.from('cards').insert({
       role,
       title: title.trim(),
       description: description.trim(),
       photo_url: photoUrl,
+      video_url: videoUrl,
       system_id: finalSystemId,
       kanban_id: kanbanId,
       area: area.trim(),
@@ -102,13 +163,25 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
     }
   }
 
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
-    if (file) {
+    if (!file) return
+    if (file.type.startsWith('image/')) {
       setPhoto(file)
+      setVideo(null)
+      if (videoUrlRef.current) { URL.revokeObjectURL(videoUrlRef.current); videoUrlRef.current = '' }
+      setVideoPreview('')
       const reader = new FileReader()
       reader.onload = (ev) => setPhotoPreview(ev.target?.result as string)
       reader.readAsDataURL(file)
+    } else if (file.type.startsWith('video/')) {
+      setVideo(file)
+      setPhoto(null)
+      setPhotoPreview('')
+      if (videoUrlRef.current) URL.revokeObjectURL(videoUrlRef.current)
+      const url = URL.createObjectURL(file)
+      videoUrlRef.current = url
+      setVideoPreview(url)
     }
   }
 
@@ -148,14 +221,18 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Foto/Print (opcional)</label>
+        <label className="block text-sm font-medium mb-1">Anexo (foto ou vídeo, opcional)</label>
         <label className="flex items-center gap-2 px-4 py-2 border border-border-strong rounded-lg cursor-pointer hover:bg-surface-hover">
           <Upload size={18} />
-          <span>{photo ? photo.name : 'Selecionar arquivo'}</span>
-          <input type="file" accept="image/*" onChange={handlePhotoChange} className="hidden" />
+          <span>{photo ? photo.name : video ? video.name : 'Selecionar arquivo'}</span>
+          <input type="file" accept="image/*,video/*" onChange={handleFile} className="hidden" />
         </label>
+        <p className="text-xs text-text-muted mt-1">Ou cole uma imagem da área de transferência (Ctrl+V)</p>
         {photoPreview && (
           <img src={photoPreview} alt="Preview" className="mt-2 max-h-48 rounded-lg object-contain" />
+        )}
+        {videoPreview && (
+          <video src={videoPreview} controls className="mt-2 max-h-48 rounded-lg" />
         )}
       </div>
 
@@ -197,11 +274,11 @@ export default function CardCreate({ role, backPath, selectedKanbanId }: Props) 
       </div>
 
       <div>
-        <label className="block text-sm font-medium mb-1">Área do Sistema *</label>
+        <label className="block text-sm font-medium mb-1">Rota do Sistema *</label>
         <input
           value={area} onChange={(e) => setArea(e.target.value)}
           className="w-full px-3 py-2 border border-border-strong rounded-lg bg-surface focus:ring-2 focus:ring-primary outline-none"
-          placeholder="Ex: Módulo financeiro, Relatórios, etc."
+          placeholder="Ex: /api/financeiro, /relatorios, etc."
         />
       </div>
 

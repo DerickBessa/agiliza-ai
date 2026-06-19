@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS cards (
   title TEXT NOT NULL,
   description TEXT NOT NULL,
   photo_url TEXT,
+  video_url TEXT,
   system_id UUID REFERENCES systems(id),
   area TEXT NOT NULL,
   type TEXT NOT NULL CHECK (type IN ('Bug', 'Inovação')),

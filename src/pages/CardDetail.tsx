@@ -168,7 +168,7 @@ export default function CardDetail({ role }: Props) {
 
         <div className="grid grid-cols-2 gap-4 text-sm mb-4">
           <div><span className="text-text-secondary">Sistema:</span> <span className="font-medium">{card.system_name || 'N/A'}</span></div>
-          <div><span className="text-text-secondary">Área:</span> <span className="font-medium">{card.area}</span></div>
+          <div><span className="text-text-secondary">Rota:</span> <span className="font-medium">{card.area}</span></div>
           <div><span className="text-text-secondary">Papel:</span> <span className="font-medium">{card.role}</span></div>
           <div><span className="text-text-secondary">Tipo de Tarefa:</span> <span className="font-medium">{tipoLabels[card.severity] || card.severity}</span></div>
           {card.parent_card_id && (
@@ -179,6 +179,11 @@ export default function CardDetail({ role }: Props) {
         {card.photo_url && (
           <div className="mb-4">
             <img src={card.photo_url} alt="Anexo" className="max-h-80 rounded-lg object-contain bg-muted" />
+          </div>
+        )}
+        {card.video_url && (
+          <div className="mb-4">
+            <video src={card.video_url} controls className="max-h-80 rounded-lg bg-muted w-full" />
           </div>
         )}
 

@@ -23,6 +23,7 @@ export interface Card {
   title: string
   description: string
   photo_url: string | null
+  video_url: string | null
   system_id: string
   kanban_id: string
   area: string
