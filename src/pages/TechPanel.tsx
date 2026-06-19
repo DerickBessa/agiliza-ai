@@ -116,7 +116,7 @@ export default function TechPanel() {
           className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
         >
           <LayoutDashboard size={18} />
-          Kanban Arrastável
+          Quadro Kanban (Drag & Drop)
         </Link>
       </div>
 
