@@ -10,6 +10,7 @@ import TechKanban from './pages/TechKanban.tsx'
 import TechDashboard from './pages/TechDashboard.tsx'
 import KanbanSelector from './components/KanbanSelector.tsx'
 import type { Role } from './types.ts'
+import { ArrowLeft } from 'lucide-react'
 
 function App() {
   return (
@@ -25,6 +26,10 @@ function App() {
           <Route path="tech" element={<TechPanel />} />
           <Route path="tech/kanban" element={<TechKanbanList />} />
           <Route path="tech/kanban/:id" element={<TechKanbanPage />} />
+          <Route path="tech/cs/kanban" element={<TechCSKanbanPage />} />
+          <Route path="tech/cs/kanban/:id" element={<TechCSKanbanPage />} />
+          <Route path="tech/comercial/kanban" element={<TechComercialKanbanPage />} />
+          <Route path="tech/comercial/kanban/:id" element={<TechComercialKanbanPage />} />
           <Route path="tech/new" element={<CardCreate role="Tech" backPath="/tech" />} />
           <Route path="tech/card/:id" element={<CardDetail role="Tech" />} />
           <Route path="tech/dashboard" element={<TechDashboard />} />
@@ -42,11 +47,46 @@ function App() {
 function TechKanbanList() {
   const navigate = useNavigate()
   return (
-    <KanbanSelector
-      role="Tech"
-      basePath="/tech/kanban"
-      onSelect={(k) => navigate(`/tech/kanban/${k.id}`)}
-    />
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/tech')} className="p-1 hover:bg-surface-hover rounded">
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold">Kanbans - Tech</h2>
+      </div>
+      <div className="flex flex-wrap gap-3 mb-6">
+        <button
+          onClick={() => navigate('/tech')}
+          className="px-4 py-2 bg-surface border border-border rounded-lg hover:bg-surface-hover text-sm transition-colors"
+        >
+          Painel Geral
+        </button>
+        <button
+          onClick={() => navigate('/tech/kanban')}
+          className="px-4 py-2 bg-primary text-white rounded-lg text-sm transition-colors"
+        >
+          Tech
+        </button>
+        <button
+          onClick={() => navigate('/tech/cs/kanban')}
+          className="px-4 py-2 bg-surface border border-border rounded-lg hover:bg-surface-hover text-sm transition-colors"
+        >
+          CS
+        </button>
+        <button
+          onClick={() => navigate('/tech/comercial/kanban')}
+          className="px-4 py-2 bg-surface border border-border rounded-lg hover:bg-surface-hover text-sm transition-colors"
+        >
+          Comercial
+        </button>
+      </div>
+      <KanbanSelector
+        role="Tech"
+        basePath="/tech/kanban"
+        allowCreate={false}
+        onSelect={(k) => navigate(`/tech/kanban/${k.id}`)}
+      />
+    </div>
   )
 }
 
@@ -54,6 +94,39 @@ function TechKanbanPage() {
   const params = useParams()
   if (!params.id) return <Navigate to="/tech/kanban" replace />
   return <TechKanban kanbanId={params.id} />
+}
+
+function TechCSKanbanPage() {
+  const params = useParams()
+  const navigate = useNavigate()
+  if (!params.id) return <CSKanbanSelectorRedirect navigate={navigate} role="CS" />
+  return <TechKanban kanbanId={params.id} role="CS" />
+}
+
+function TechComercialKanbanPage() {
+  const params = useParams()
+  const navigate = useNavigate()
+  if (!params.id) return <CSKanbanSelectorRedirect navigate={navigate} role="Comercial" />
+  return <TechKanban kanbanId={params.id} role="Comercial" />
+}
+
+function CSKanbanSelectorRedirect({ navigate, role }: { navigate: (path: string) => void; role: Role }) {
+  return (
+    <div>
+      <div className="flex items-center gap-3 mb-6">
+        <button onClick={() => navigate('/tech')} className="p-1 hover:bg-surface-hover rounded">
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-2xl font-bold">Kanbans - {role}</h2>
+      </div>
+      <KanbanSelector
+        role={role}
+        basePath={`/tech/${role.toLowerCase()}/kanban`}
+        allowCreate={false}
+        onSelect={(k) => navigate(`/tech/${role.toLowerCase()}/kanban/${k.id}`)}
+      />
+    </div>
+  )
 }
 
 function CSCardCreatePage() {

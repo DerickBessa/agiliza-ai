@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
-import type { Card, Kanban } from '../types.ts'
-import { Plus, Bug, Lightbulb, ArrowUpCircle, Columns, GripVertical, User } from 'lucide-react'
+import type { Role, Card, Kanban } from '../types.ts'
+import { Plus, Bug, Lightbulb, ArrowUpCircle, Columns, GripVertical, User, ArrowLeft } from 'lucide-react'
 
 interface DragItem {
   cardId: string
@@ -33,9 +33,10 @@ const tipoIcons: Record<string, React.ReactNode> = {
 
 interface Props {
   kanbanId: string
+  role?: Role
 }
 
-export default function TechKanban({ kanbanId }: Props) {
+export default function TechKanban({ kanbanId, role = 'Tech' }: Props) {
   const [cards, setCards] = useState<Card[]>([])
   const [kanban, setKanban] = useState<Kanban | null>(null)
   const [dragging, setDragging] = useState<DragItem | null>(null)
@@ -43,7 +44,7 @@ export default function TechKanban({ kanbanId }: Props) {
   useEffect(() => {
     loadKanban()
     loadCards()
-  }, [kanbanId])
+  }, [kanbanId, role])
 
   async function loadKanban() {
     const { data } = await supabase.from('kanbans').select('*').eq('id', kanbanId).single()
@@ -54,7 +55,7 @@ export default function TechKanban({ kanbanId }: Props) {
     const { data } = await supabase
       .from('cards')
       .select('*, systems(name)')
-      .eq('role', 'Tech')
+      .eq('role', role)
       .eq('kanban_id', kanbanId)
       .order('created_at', { ascending: false })
     if (data) {
@@ -84,10 +85,20 @@ export default function TechKanban({ kanbanId }: Props) {
 
   if (!kanban) return <div className="text-center py-12 text-text-secondary">Carregando...</div>
 
+  const backPath = role === 'Tech' ? '/tech/kanban' : '/tech'
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-bold flex items-center gap-2"><Columns size={20} /> {kanban.name}</h2>
+        <div className="flex items-center gap-3">
+          <Link to={backPath} className="p-1 hover:bg-surface-hover rounded">
+            <ArrowLeft size={20} />
+          </Link>
+          <h2 className="text-xl font-bold flex items-center gap-2"><Columns size={20} /> {kanban.name}</h2>
+          {role !== 'Tech' && (
+            <span className={`px-2 py-0.5 text-xs font-medium rounded ${role === 'CS' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300' : 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300'}`}>{role}</span>
+          )}
+        </div>
         <Link
           to={`/tech/new?kanban=${kanbanId}`}
           className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"

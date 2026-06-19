@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase.ts'
 import type { Card, Kanban } from '../types.ts'
 import { Plus, Bug, Lightbulb, ArrowUpCircle, Columns, BarChart3, X, GripVertical, User } from 'lucide-react'
@@ -32,7 +32,14 @@ const tipoIcons: Record<string, React.ReactNode> = {
   sugestao: <Lightbulb size={14} className="text-amber-500" />,
 }
 
+const roleColors: Record<string, string> = {
+  Tech: 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300',
+  CS: 'bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300',
+  Comercial: 'bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300',
+}
+
 export default function TechPanel() {
+  const navigate = useNavigate()
   const [kanbans, setKanbans] = useState<Kanban[]>([])
   const [cards, setCards] = useState<Card[]>([])
   const [selectedKanban, setSelectedKanban] = useState<string>('')
@@ -42,13 +49,13 @@ export default function TechPanel() {
     loadKanbans()
     loadCards()
     const channel = supabase.channel('tech-cards')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'cards', filter: 'role=eq.Tech' }, () => loadCards())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cards' }, () => loadCards())
       .subscribe()
     return () => { supabase.removeChannel(channel) }
   }, [])
 
   async function loadKanbans() {
-    const { data } = await supabase.from('kanbans').select('*').eq('role', 'Tech').order('created_at')
+    const { data } = await supabase.from('kanbans').select('*').order('created_at')
     if (data) setKanbans(data)
   }
 
@@ -56,7 +63,6 @@ export default function TechPanel() {
     const { data } = await supabase
       .from('cards')
       .select('*, systems(name)')
-      .eq('role', 'Tech')
       .order('created_at', { ascending: false })
     if (data) {
       setCards(data.map((c) => ({
@@ -87,9 +93,15 @@ export default function TechPanel() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <h2 className="text-2xl font-bold">Tech Panel</h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => navigate('/tech/kanban')}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-strong rounded-lg hover:bg-surface-hover text-sm transition-colors"
+          >
+            <Columns size={16} /> Kanbans
+          </button>
           <Link
             to="/tech/dashboard"
             className="flex items-center gap-1.5 px-3 py-1.5 bg-surface border border-border-strong rounded-lg hover:bg-surface-hover text-sm transition-colors"
@@ -142,7 +154,10 @@ export default function TechPanel() {
                   className="block bg-surface rounded-lg p-3 shadow-sm hover:shadow-md transition-shadow border border-border cursor-grab active:cursor-grabbing"
                 >
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <span className="text-xs font-medium text-text-secondary">{card.system_name || 'Sistema'}</span>
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className={`px-1 py-0.5 text-xs font-medium rounded ${roleColors[card.role] || 'bg-gray-100 text-gray-600'}`}>{card.role}</span>
+                      <span className="text-xs font-medium text-text-secondary">{card.system_name || 'Sistema'}</span>
+                    </div>
                     <div className="flex items-center gap-1 shrink-0">
                       {tipoIcons[card.severity] || <Bug size={14} className="text-gray-400" />}
                       <GripVertical size={12} className="text-text-muted" />

@@ -8,10 +8,11 @@ interface Props {
   role: Role
   basePath: string
   allowDelete?: boolean
+  allowCreate?: boolean
   onSelect?: (kanban: Kanban) => void
 }
 
-export default function KanbanSelector({ role, basePath, allowDelete, onSelect }: Props) {
+export default function KanbanSelector({ role, basePath, allowDelete, allowCreate = true, onSelect }: Props) {
   const navigate = useNavigate()
   const [kanbans, setKanbans] = useState<Kanban[]>([])
   const [showCreate, setShowCreate] = useState(false)
@@ -66,13 +67,15 @@ export default function KanbanSelector({ role, basePath, allowDelete, onSelect }
     <div>
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-2xl font-bold">{role} - Kanbans</h2>
-        <button
-          onClick={() => setShowCreate(!showCreate)}
-          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
-        >
-          <Plus size={18} />
-          Novo Kanban
-        </button>
+        {allowCreate && (
+          <button
+            onClick={() => setShowCreate(!showCreate)}
+            className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
+          >
+            <Plus size={18} />
+            Novo Kanban
+          </button>
+        )}
       </div>
 
       {showCreate && (

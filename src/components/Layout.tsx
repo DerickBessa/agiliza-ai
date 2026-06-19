@@ -54,7 +54,9 @@ export default function Layout() {
             {role === 'Tech' && (
               <div className="flex gap-2 text-sm items-center">
                 <Link to="/tech" className={`px-3 py-1.5 rounded ${location.pathname === '/tech' ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Painel</Link>
-                <Link to="/tech/kanban" className={`px-3 py-1.5 rounded ${location.pathname.startsWith('/tech/kanban') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban</Link>
+                <Link to="/tech/kanban" className={`px-3 py-1.5 rounded ${location.pathname.startsWith('/tech/kanban') && !location.pathname.includes('/cs/') && !location.pathname.includes('/comercial/') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban Tech</Link>
+                <Link to="/tech/cs/kanban" className={`px-3 py-1.5 rounded ${location.pathname.includes('/tech/cs/') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban CS</Link>
+                <Link to="/tech/comercial/kanban" className={`px-3 py-1.5 rounded ${location.pathname.includes('/tech/comercial/') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}>Kanban Comercial</Link>
                 <Link to="/tech/dashboard" className={`px-3 py-1.5 rounded flex items-center gap-1 ${location.pathname.startsWith('/tech/dashboard') ? 'bg-primary-light text-primary-dark' : 'hover:bg-surface-hover'}`}><BarChart3 size={14} /> Dashboard</Link>
               </div>
             )}
