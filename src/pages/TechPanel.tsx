@@ -134,7 +134,7 @@ export default function TechPanel() {
                   </span>
                   <span className="text-xs text-gray-400">{statusLabels[card.status]}</span>
                 </div>
-                <Link to={`/tech/card/${card.id}`} className="text-base font-semibold hover:text-purple-600 dark:hover:text-purple-400">{card.title}</Link>
+                <Link to={`/tech/card/${card.id}`} className="text-base font-semibold hover:text-primary">{card.title}</Link>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{card.description}</p>
                 <div className="flex items-center gap-3 mt-1 text-xs text-gray-400">
                   <span>{card.system_name}</span>

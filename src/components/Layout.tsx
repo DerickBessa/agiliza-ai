@@ -13,15 +13,7 @@ export default function Layout() {
     const next = !dark
     setDark(next)
     localStorage.setItem('dark', next.toString())
-    if (next) {
-      document.documentElement.classList.add('dark')
-    } else {
-      document.documentElement.classList.remove('dark')
-    }
-  }
-
-  if (dark) {
-    document.documentElement.classList.add('dark')
+    document.documentElement.classList.toggle('dark', next)
   }
 
   return (
@@ -31,20 +23,20 @@ export default function Layout() {
           <button onClick={() => navigate(-1)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
             <ArrowLeft size={20} />
           </button>
-          <Link to="/" className="font-bold text-lg text-purple-600 dark:text-purple-400">Agiliza AI</Link>
+          <Link to="/" className="font-bold text-lg text-primary">Agiliza AI</Link>
           <span className="text-sm text-gray-500 dark:text-gray-400 ml-2">| {role}</span>
         </div>
         <div className="flex items-center gap-3">
           {role === 'CS' && (
             <div className="flex gap-2 text-sm">
-              <Link to="/cs/kanban" className={`px-3 py-1.5 rounded ${location.pathname === '/cs/kanban' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Kanban</Link>
-              <Link to="/cs/criar" className={`px-3 py-1.5 rounded ${location.pathname === '/cs/criar' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Novo Card</Link>
+              <Link to="/cs/kanban" className={`px-3 py-1.5 rounded ${location.pathname === '/cs/kanban' ? 'bg-primary-light text-primary-dark dark:text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Kanban</Link>
+              <Link to="/cs/criar" className={`px-3 py-1.5 rounded ${location.pathname === '/cs/criar' ? 'bg-primary-light text-primary-dark dark:text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Novo Card</Link>
             </div>
           )}
           {role === 'Comercial' && (
             <div className="flex gap-2 text-sm">
-              <Link to="/comercial/kanban" className={`px-3 py-1.5 rounded ${location.pathname === '/comercial/kanban' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Kanban</Link>
-              <Link to="/comercial/criar" className={`px-3 py-1.5 rounded ${location.pathname === '/comercial/criar' ? 'bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Novo Card</Link>
+              <Link to="/comercial/kanban" className={`px-3 py-1.5 rounded ${location.pathname === '/comercial/kanban' ? 'bg-primary-light text-primary-dark dark:text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Kanban</Link>
+              <Link to="/comercial/criar" className={`px-3 py-1.5 rounded ${location.pathname === '/comercial/criar' ? 'bg-primary-light text-primary-dark dark:text-primary' : 'hover:bg-gray-100 dark:hover:bg-gray-700'}`}>Novo Card</Link>
             </div>
           )}
           <button onClick={toggleDark} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">

@@ -3,9 +3,9 @@ import { Headset, ShoppingBag, Wrench } from 'lucide-react'
 
 export default function RoleSelect() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-light to-blue-50 dark:from-gray-950 dark:to-gray-900 flex flex-col items-center justify-center p-4">
       <div className="text-center mb-10">
-        <h1 className="text-4xl md:text-5xl font-bold text-purple-600 dark:text-purple-400 mb-2">Agiliza AI</h1>
+        <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Agiliza AI</h1>
         <p className="text-gray-500 dark:text-gray-400 text-lg">Selecione seu papel</p>
       </div>
       <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl">

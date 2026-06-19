@@ -72,7 +72,7 @@ export default function KanbanBoard({ role, createPath, cardDetailPath }: Props)
         <h2 className="text-2xl font-bold">Kanban - {role}</h2>
         <Link
           to={createPath}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors text-sm"
         >
           <Plus size={18} />
           Novo Card

@@ -138,7 +138,7 @@ export default function CardDetail({ role }: Props) {
           <div><span className="text-gray-500">Área:</span> <span className="font-medium">{card.area}</span></div>
           <div><span className="text-gray-500">Papel:</span> <span className="font-medium">{card.role}</span></div>
           {card.parent_card_id && (
-            <div><span className="text-gray-500">Card relacionado:</span> <Link to={`/${card.role.toLowerCase()}/card/${card.parent_card_id}`} className="text-purple-600 hover:underline">Ver original</Link></div>
+            <div><span className="text-gray-500">Card relacionado:</span> <Link to={`/${card.role.toLowerCase()}/card/${card.parent_card_id}`} className="text-primary hover:underline">Ver original</Link></div>
           )}
         </div>
 
@@ -172,7 +172,7 @@ export default function CardDetail({ role }: Props) {
             </>
           )}
           {showReprovarForm && (
-            <button onClick={handleNewCardFromReprovar} className="flex items-center gap-1 px-3 py-1.5 bg-purple-600 text-white text-sm rounded-lg hover:bg-purple-700 transition-colors">
+            <button onClick={handleNewCardFromReprovar} className="flex items-center gap-1 px-3 py-1.5 bg-primary text-white text-sm rounded-lg hover:bg-primary-hover transition-colors">
               Criar Card Relacionado
             </button>
           )}
@@ -197,13 +197,13 @@ export default function CardDetail({ role }: Props) {
           <input
             value={newComment} onChange={(e) => setNewComment(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleAddComment()}
-            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none text-sm"
+            className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none text-sm"
             placeholder="Adicionar comentário..."
           />
           <button
             onClick={handleAddComment}
             disabled={submitting || !newComment.trim()}
-            className="px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+            className="px-3 py-2 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
           >
             <Send size={16} />
           </button>

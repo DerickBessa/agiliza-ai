@@ -106,7 +106,7 @@ export default function CardCreate({ role, backPath }: Props) {
         <label className="block text-sm font-medium mb-1">Título *</label>
         <input
           value={title} onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
           placeholder="Título do card"
         />
       </div>
@@ -115,7 +115,7 @@ export default function CardCreate({ role, backPath }: Props) {
         <label className="block text-sm font-medium mb-1">Descrição do Problema *</label>
         <textarea
           value={description} onChange={(e) => setDescription(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none min-h-[100px]"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none min-h-[100px]"
           placeholder="Descreva o problema..."
         />
       </div>
@@ -138,14 +138,14 @@ export default function CardCreate({ role, backPath }: Props) {
           <button
             type="button"
             onClick={() => setShowNewSystem(false)}
-            className={`px-3 py-1 text-sm rounded ${!showNewSystem ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+            className={`px-3 py-1 text-sm rounded ${!showNewSystem ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
           >
             Existente
           </button>
           <button
             type="button"
             onClick={() => setShowNewSystem(true)}
-            className={`px-3 py-1 text-sm rounded ${showNewSystem ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
+            className={`px-3 py-1 text-sm rounded ${showNewSystem ? 'bg-primary text-white' : 'bg-gray-200 dark:bg-gray-700'}`}
           >
             Novo Sistema
           </button>
@@ -153,13 +153,13 @@ export default function CardCreate({ role, backPath }: Props) {
         {showNewSystem ? (
           <input
             value={newSystem} onChange={(e) => setNewSystem(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
             placeholder="Nome do novo sistema"
           />
         ) : (
           <select
             value={systemId} onChange={(e) => setSystemId(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="">Selecione um sistema</option>
             {systems.map((s) => (
@@ -173,7 +173,7 @@ export default function CardCreate({ role, backPath }: Props) {
         <label className="block text-sm font-medium mb-1">Área do Sistema *</label>
         <input
           value={area} onChange={(e) => setArea(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
           placeholder="Ex: Módulo financeiro, Relatórios, etc."
         />
       </div>
@@ -183,7 +183,7 @@ export default function CardCreate({ role, backPath }: Props) {
           <label className="block text-sm font-medium mb-1">Tipo *</label>
           <select
             value={type} onChange={(e) => setType(e.target.value as 'Bug' | 'Inovação')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Bug">Bug</option>
             <option value="Inovação">Inovação</option>
@@ -193,7 +193,7 @@ export default function CardCreate({ role, backPath }: Props) {
           <label className="block text-sm font-medium mb-1">Severidade *</label>
           <select
             value={severity} onChange={(e) => setSeverity(e.target.value as 'Blocker' | 'Major' | 'Minor')}
-            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-purple-500 outline-none"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 focus:ring-2 focus:ring-primary outline-none"
           >
             <option value="Blocker">Blocker</option>
             <option value="Major">Major</option>
@@ -205,7 +205,7 @@ export default function CardCreate({ role, backPath }: Props) {
       <button
         type="submit"
         disabled={submitting}
-        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+        className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover disabled:opacity-50 transition-colors"
       >
         <Send size={18} />
         {submitting ? 'Enviando...' : 'Criar Card'}
