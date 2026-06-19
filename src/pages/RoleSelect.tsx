@@ -34,7 +34,7 @@ export default function RoleSelect() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-light to-page flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-light to-page text-text flex flex-col items-center justify-center p-4">
       <div className="text-center mb-10">
         <h1 className="text-4xl md:text-5xl font-bold text-primary mb-2">Agiliza AI</h1>
         <p className="text-text-secondary text-lg">Selecione seu papel</p>
