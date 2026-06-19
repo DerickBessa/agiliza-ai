@@ -7,7 +7,7 @@ export default function Layout() {
   const location = useLocation()
   const navigate = useNavigate()
   const role = location.pathname.startsWith('/cs') ? 'CS' : location.pathname.startsWith('/comercial') ? 'Comercial' : 'Tech'
-  const [dark, setDark] = useState(() => localStorage.getItem('dark') === 'true')
+  const [dark, setDark] = useState(() => localStorage.getItem('dark') !== 'false')
 
   const toggleDark = () => {
     const next = !dark

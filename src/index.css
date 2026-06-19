@@ -10,9 +10,9 @@
   --_surface: #ffffff;
   --_surface-hover: #f3f4f6;
   --_muted: #f3f4f6;
-  --_txt: #111827;
-  --_txt-secondary: #6b7280;
-  --_txt-muted: #9ca3af;
+  --_txt: #000000;
+  --_txt-secondary: #374151;
+  --_txt-muted: #6b7280;
   --_border: #e5e7eb;
   --_border-strong: #d1d5db;
 }
@@ -27,7 +27,7 @@
   --_surface: #111827;
   --_surface-hover: #1f2937;
   --_muted: #1f2937;
-  --_txt: #f3f4f6;
+  --_txt: #ffffff;
   --_txt-secondary: #d1d5db;
   --_txt-muted: #9ca3af;
   --_border: #374151;
