@@ -355,12 +355,19 @@ export default function TechDashboard() {
         <div className="fixed inset-0 z-50 bg-white dark:bg-gray-900 overflow-y-auto" data-print>
           <style>{`
             @media print {
+              @page { margin: 15mm; size: A4; }
               .no-print { display: none !important; }
-              [data-print] { position: fixed !important; inset: 0 !important; background: white !important; color: black !important; }
+              [data-print] { position: fixed !important; inset: 0 !important; background: white !important; color: black !important; width: 100% !important; overflow: visible !important; }
               [data-print] * { color: black !important; }
+              [data-print] .chart-container { break-inside: avoid; page-break-inside: avoid; }
+              [data-print] .report-section { break-inside: avoid; page-break-inside: avoid; }
+              [data-print] .report-header { margin-bottom: 20px; }
+              [data-print] .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+              [data-print] .severity-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             }
           `}</style>
-          <div className="max-w-4xl mx-auto p-6">
+          <div className="max-w-5xl mx-auto p-6">
             <div className="flex items-center justify-between mb-6 no-print">
               <h2 className="text-2xl font-bold">Relatório {isAnnual ? `Anual - ${year}` : `- ${monthNames[month]} ${year}`}</h2>
               <div className="flex items-center gap-2">
@@ -373,64 +380,222 @@ export default function TechDashboard() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-4 mb-8">
-              <div className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <p className="text-2xl font-bold">{periodCards.length}</p>
-                <p className="text-sm text-gray-500">Total Cards</p>
+            <div className="text-center mb-8 report-header">
+              <h1 className="text-3xl font-bold text-primary">Agiliza AI</h1>
+              <p className="text-lg text-gray-500 mt-1">Relatório de Gestão {isAnnual ? `Anual - ${year}` : `${monthNames[month]} ${year}`}</p>
+              <p className="text-sm text-gray-400 mt-1">Relatório gerado em {new Date().toLocaleDateString('pt-BR')} — Dados consolidados de todas as equipes (CS, Comercial, Tech)</p>
+            </div>
+
+            <div className="kpi-grid grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
+              <div className="text-center p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                <p className="text-3xl font-bold text-gray-700 dark:text-gray-200">{periodCards.length}</p>
+                <p className="text-sm font-medium text-gray-500 mt-1">Total de Cards</p>
+                <p className="text-xs text-gray-400 mt-1">Demandas registradas no período</p>
               </div>
-              <div className="text-center p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-green-600">{approvedCards.length}</p>
-                <p className="text-sm text-gray-500">Aprovados</p>
+              <div className="text-center p-5 bg-green-50 dark:bg-green-900/20 rounded-xl border border-green-200 dark:border-green-800">
+                <p className="text-3xl font-bold text-green-600 dark:text-green-400">{approvedCards.length}</p>
+                <p className="text-sm font-medium text-gray-500 mt-1">Aprovados</p>
+                <p className="text-xs text-gray-400 mt-1">Cards concluídos e aprovados</p>
               </div>
-              <div className="text-center p-4 bg-red-50 dark:bg-red-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-red-600">{rejectedCards.length}</p>
-                <p className="text-sm text-gray-500">Reprovados</p>
+              <div className="text-center p-5 bg-red-50 dark:bg-red-900/20 rounded-xl border border-red-200 dark:border-red-800">
+                <p className="text-3xl font-bold text-red-600 dark:text-red-400">{rejectedCards.length}</p>
+                <p className="text-sm font-medium text-gray-500 mt-1">Reprovados</p>
+                <p className="text-xs text-gray-400 mt-1">Cards que não atenderam aos critérios</p>
               </div>
-              <div className="text-center p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                <p className="text-2xl font-bold text-amber-600">{periodCards.length > 0 ? `${Math.round((approvedCards.length / periodCards.length) * 100)}%` : '-'}</p>
-                <p className="text-sm text-gray-500">Aprovação</p>
+              <div className="text-center p-5 bg-amber-50 dark:bg-amber-900/20 rounded-xl border border-amber-200 dark:border-amber-800">
+                <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{periodCards.length > 0 ? `${Math.round((approvedCards.length / periodCards.length) * 100)}%` : '-'}</p>
+                <p className="text-sm font-medium text-gray-500 mt-1">Taxa de Aprovação</p>
+                <p className="text-xs text-gray-400 mt-1">Percentual de cards aprovados</p>
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4 mb-8">
+            <div className="report-section bg-surface rounded-xl border border-border p-6 mb-6 chart-container">
+              <h3 className="text-lg font-semibold mb-1">1. Tendência Mensal</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Evolução do volume de cards nos últimos 12 meses, incluindo total de cards criados, aprovados e reprovados por mês.
+                Este gráfico permite visualizar a sazonalidade das demandas e a efetividade das entregas ao longo do tempo.
+              </p>
+              {monthTrend.every(m => m.total === 0) ? (
+                <p className="text-sm text-text-muted text-center py-8">Sem dados no período.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={280}>
+                  <BarChart data={monthTrend}>
+                    <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
+                    <XAxis dataKey="name" tick={{ fill: colors.text, fontSize: 12 }} />
+                    <YAxis tick={{ fill: colors.text, fontSize: 12 }} />
+                    <Tooltip contentStyle={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: 8, fontSize: 13 }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="total" name="Total" fill={PALETTE[0]} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="aprovados" name="Aprovados" fill={PALETTE[2]} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="reprovados" name="Reprovados" fill={PALETTE[5]} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="report-section bg-surface rounded-xl border border-border p-6 chart-container">
+                <h3 className="text-lg font-semibold mb-1">2. Distribuição por Status</h3>
+                <p className="text-sm text-text-secondary mb-4">
+                  Proporção de cards em cada etapa do fluxo de trabalho. A visualização ajuda a identificar gargalos — 
+                  por exemplo, uma concentração alta em "Em Progresso" pode indicar sobrecarga da equipe, 
+                  enquanto muitos cards "A Fazer" sugerem baixa priorização.
+                </p>
+                {statusData.length === 0 ? (
+                  <p className="text-sm text-text-muted text-center py-8">Sem dados no período.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }: PieLabelRenderProps) => `${name || ''} ${((percent || 0) * 100).toFixed(0)}%`}>
+                        {statusData.map((entry, i) => <Cell key={i} fill={entry.color} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: 8 }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+
+              <div className="report-section bg-surface rounded-xl border border-border p-6 chart-container">
+                <h3 className="text-lg font-semibold mb-1">3. Cards por Sistema</h3>
+                <p className="text-sm text-text-secondary mb-4">
+                  Distribuição das demandas entre os sistemas da plataforma. Este gráfico permite identificar quais
+                  sistemas concentram mais solicitações e podem necessitar de maior atenção ou investimento em melhorias.
+                </p>
+                {systemData.length === 0 ? (
+                  <p className="text-sm text-text-muted text-center py-8">Sem dados no período.</p>
+                ) : (
+                  <ResponsiveContainer width="100%" height={Math.max(220, systemData.length * 50)}>
+                    <BarChart data={systemData} layout="vertical" margin={{ left: 90 }}>
+                      <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
+                      <XAxis type="number" tick={{ fill: colors.text, fontSize: 12 }} />
+                      <YAxis type="category" dataKey="name" tick={{ fill: colors.text, fontSize: 12 }} width={85} />
+                      <Tooltip contentStyle={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: 8 }} />
+                      <Bar dataKey="value" name="Cards" fill={PALETTE[1]} radius={[0, 4, 4, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                )}
+              </div>
+            </div>
+
+            <div className="report-section bg-surface rounded-xl border border-border p-6 mb-6 chart-container">
+              <h3 className="text-lg font-semibold mb-1">4. Produtividade por Desenvolvedor</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Desempenho individual dos desenvolvedores, medido pela quantidade de cards aprovados e reprovados no período.
+                Cards reprovados não indicam necessariamente baixa performance — podem refletir desalinhamento de requisitos
+                ou critérios de aceite mais rigorosos. Use este dado para orientar feedbacks e plano de desenvolvimento.
+              </p>
+              {devData.length === 0 ? (
+                <p className="text-sm text-text-muted text-center py-8">Nenhum card resolvido no período.</p>
+              ) : (
+                <ResponsiveContainer width="100%" height={Math.max(220, devData.length * 55)}>
+                  <BarChart data={devData} layout="vertical" margin={{ left: 100 }}>
+                    <CartesianGrid stroke={colors.grid} strokeDasharray="3 3" />
+                    <XAxis type="number" tick={{ fill: colors.text, fontSize: 12 }} />
+                    <YAxis type="category" dataKey="name" tick={{ fill: colors.text, fontSize: 12 }} width={95} />
+                    <Tooltip contentStyle={{ background: colors.tooltipBg, borderColor: colors.tooltipBorder, borderRadius: 8 }} />
+                    <Legend wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="aprovados" name="Aprovados" fill={PALETTE[2]} radius={[0, 4, 4, 0]} stackId="a" />
+                    <Bar dataKey="reprovados" name="Reprovados" fill={PALETTE[5]} radius={[0, 4, 4, 0]} stackId="a" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mb-6 report-section">
               {(['bug', 'melhoria', 'sugestao'] as const).map(sev => {
                 const total = severityTotals[sev]
                 const approved = severityApproved[sev]
+                const labels: Record<string, string> = {
+                  bug: 'Bugs relatados vs resolvidos. A taxa de resolução de bugs é um indicador direto da qualidade e agilidade da equipe de desenvolvimento.',
+                  melhoria: 'Melhorias solicitadas versus atendidas. Reflete a capacidade da equipe de evoluir o produto com base em feedbacks.',
+                  sugestao: 'Sugestões acatadas versus propostas. Demonstra o nível de abertura a contribuições e inovação contínua.',
+                }
                 return (
-                  <div key={sev} className="text-center p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <p className="text-2xl font-bold">{total > 0 ? `${Math.round((approved / total) * 100)}%` : '-'}</p>
-                    <p className="text-sm text-gray-500">{SEVERITY_LABELS[sev]}s ({approved}/{total})</p>
+                  <div key={sev} className="text-center p-5 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                    <p className="text-2xl font-bold text-gray-700 dark:text-gray-200">{total > 0 ? `${Math.round((approved / total) * 100)}%` : '-'}</p>
+                    <p className="text-sm font-medium text-gray-500 mt-1">{SEVERITY_LABELS[sev]}s</p>
+                    <p className="text-xs text-gray-400 mt-1">{approved}/{total} resolvidos</p>
+                    <p className="text-xs text-gray-400 mt-2 leading-relaxed">{labels[sev]}</p>
                   </div>
                 )
               })}
             </div>
 
-            {reportByDev.length === 0 ? (
-              <p className="text-center py-8 text-gray-400">Nenhum card aprovado no período.</p>
-            ) : (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold">Cards Aprovados por Desenvolvedor</h3>
-                {reportByDev.map(([dev, devCards]) => (
-                  <div key={dev} className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-                    <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium flex items-center gap-1"><User size={16} /> {dev}</h4>
-                      <span className="text-sm text-gray-500">{devCards.length} card{devCards.length !== 1 ? 's' : ''}</span>
-                    </div>
-                    <div className="space-y-2">
-                      {devCards.map(card => (
-                        <div key={card.id} className="flex items-center justify-between text-sm bg-gray-50 dark:bg-gray-800 rounded-lg p-2">
-                          <div className="flex items-center gap-2 min-w-0">
-                            <span className="text-xs text-gray-400 shrink-0">{card.system_name || 'N/A'}</span>
-                            <span className="truncate">{card.title}</span>
-                          </div>
-                          <span className="text-xs text-gray-400 shrink-0 ml-2">{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
-                        </div>
-                      ))}
-                    </div>
+            <div className="report-section bg-surface rounded-xl border border-border p-6 mb-6">
+              <h3 className="text-lg font-semibold mb-1">5. Cards Aguardando — Tempo de Espera</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Cards atualmente na etapa "A Fazer" que ainda não foram iniciados. Dias de espera elevados (acima de 7 dias,
+                destacados em vermelho) podem indicar necessidade de revisão de prioridades ou realocação de recursos.
+              </p>
+              {aFazerCards.length === 0 ? (
+                <p className="text-sm text-text-muted text-center py-4">Nenhum card em A Fazer no período.</p>
+              ) : (
+                <>
+                  <div className="flex items-center gap-2 mb-3 text-sm text-text-secondary">
+                    <span className="font-medium">{aFazerCards.length} card{aFazerCards.length !== 1 ? 's' : ''} aguardando</span>
+                    <span className="text-xs">— Média de {aFazerCards.length > 0 ? Math.round(aFazerCards.reduce((s, c) => s + getDaysWaiting(c.created_at), 0) / aFazerCards.length) : 0} dias de espera</span>
                   </div>
-                ))}
-              </div>
-            )}
+                  <div className="space-y-2 max-h-80 overflow-y-auto">
+                    {aFazerCards.map(card => {
+                      const days = getDaysWaiting(card.created_at)
+                      return (
+                        <div key={card.id} className={`flex items-center justify-between text-sm p-3 rounded-lg ${days > 7 ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' : 'bg-muted'}`}>
+                          <div className="flex items-center gap-2 min-w-0">
+                            {days > 7 && <AlertTriangle size={14} className="text-red-500 shrink-0" />}
+                            <span className="truncate font-medium">{card.title}</span>
+                            <span className="text-xs text-text-muted">{card.system_name}</span>
+                            <span className="text-xs text-text-muted">({card.area})</span>
+                          </div>
+                          <span className={`shrink-0 ml-2 font-medium ${days > 7 ? 'text-red-600 dark:text-red-400' : 'text-text-secondary'}`}>{days}d</span>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="report-section bg-surface rounded-xl border border-border p-6 mb-6">
+              <h3 className="text-lg font-semibold mb-1">6. Cards Aprovados por Desenvolvedor</h3>
+              <p className="text-sm text-text-secondary mb-4">
+                Relação detalhada de todos os cards aprovados no período, agrupados por desenvolvedor responsável.
+                Útil para relatórios de desempenho individuais e reconhecimento de resultados.
+              </p>
+              {reportByDev.length === 0 ? (
+                <p className="text-center py-8 text-text-muted">Nenhum card aprovado no período.</p>
+              ) : (
+                <div className="space-y-6">
+                  {reportByDev.map(([dev, devCards]) => (
+                    <div key={dev} className="border border-border rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="font-medium flex items-center gap-2">
+                          <User size={16} className="text-primary" />
+                          {dev}
+                        </h4>
+                        <span className="text-sm bg-primary/10 text-primary px-2.5 py-0.5 rounded-full font-medium">{devCards.length} card{devCards.length !== 1 ? 's' : ''}</span>
+                      </div>
+                      <div className="space-y-2">
+                        {devCards.map(card => (
+                          <div key={card.id} className="flex items-center justify-between text-sm bg-muted rounded-lg p-2.5">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-xs text-text-secondary shrink-0 font-medium">{card.system_name || 'N/A'}</span>
+                              <span className="text-xs text-text-muted">|</span>
+                              <span className="truncate">{card.title}</span>
+                            </div>
+                            <span className="text-xs text-text-muted shrink-0 ml-2">{new Date(card.created_at).toLocaleDateString('pt-BR')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="text-center text-xs text-gray-400 mt-8 pb-4 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <p>Agiliza AI — Relatório gerado automaticamente em {new Date().toLocaleString('pt-BR')}</p>
+              <p className="mt-1">Dados sujeitos a alterações conforme novos cards são criados ou atualizados.</p>
+            </div>
           </div>
         </div>
       )}
