@@ -17,7 +17,6 @@ export default function TechReport() {
     const { data } = await supabase
       .from('cards')
       .select('*, systems(name)')
-      .eq('role', 'Tech')
       .order('created_at', { ascending: false })
     if (data) {
       setCards(data.map((c) => ({ ...c, system_name: c.systems?.name })))
